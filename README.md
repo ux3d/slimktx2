@@ -1,2 +1,2 @@
 # slimktx2
-Slim C++ KTX2 parser library
+Slim C++ library for KTX2 encoding
