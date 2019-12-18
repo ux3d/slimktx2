@@ -56,10 +56,9 @@ uint64_t ux3d::slimktx2::SlimKTX2::getContainerSize(const Header& _header)
 	const uint32_t pixelSize = getPixelSize(_header.vkFormat);
 
 	uint32_t resolution = _header.pixelWidth * _header.pixelHeight * _header.pixelDepth;
-	for (uint32_t level = 0u; level < _header.levelCount; ++level)
+	for (uint32_t level = 0u; level < _header.levelCount; ++level, resolution >>= 1u)
 	{
 		totalSize += resolution * pixelSize * _header.layerCount * _header.faceCount;
-		resolution >>= 1u;
 	}
 
 	return totalSize;
@@ -150,6 +149,27 @@ Result SlimKTX2::allocateContainer()
 
 Result SlimKTX2::setImage(void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer)
 {
+	uint64_t offset = 0u;
+	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+
+	uint32_t resolution = m_header.pixelWidth * m_header.pixelHeight * m_header.pixelDepth;
+
+	const uint32_t imageSize = resolution >> _level;
+
+	if (_byteSize != imageSize)
+	{
+		return Result::InvalidImageSize;
+	}
+
+	for (uint32_t level = 0u; level < _level; ++level, resolution >>= 1u)
+	{
+		offset += resolution * pixelSize * _level * _face;
+	}
+
+	uint8_t* pDst = m_pContainer + offset;
+
+	memcpy(pDst, _pData, _byteSize);
+
 	return Result();
 }
 

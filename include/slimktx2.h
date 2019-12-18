@@ -84,6 +84,7 @@ namespace ux3d
 			Success = 0u,
 			IOReadFail,
 			InvalidIdentifier,
+			InvalidImageSize, // setImage _byteSize does not match information of specifyFormat
 		};
 
 		/// Serialization API:
