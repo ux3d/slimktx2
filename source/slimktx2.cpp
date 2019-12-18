@@ -24,6 +24,47 @@ void SlimKTX2::clear()
 	}
 }
 
+uint32_t SlimKTX2::getTypeSize(Format _vkFormat)
+{
+	switch (_vkFormat)
+	{
+	case Format::UNDEFINED:
+		return 1u;
+	default:
+		break;
+	}
+
+	return 0u; // invalid
+}
+
+uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
+{
+	switch (_vkFormat)
+	{
+	case Format::R16G16B16A16_SFLOAT:
+		return 8u;
+	default:
+		break;
+	}
+
+	return 0u; // invalid
+}
+
+uint64_t ux3d::slimktx2::SlimKTX2::getContainerSize(const Header& _header)
+{
+	uint64_t totalSize = 0u;
+	const uint32_t pixelSize = getPixelSize(_header.vkFormat);
+
+	uint32_t resolution = _header.pixelWidth * _header.pixelHeight * _header.pixelDepth;
+	for (uint32_t level = 0u; level < _header.levelCount; ++level)
+	{
+		totalSize += resolution * pixelSize * _header.layerCount * _header.faceCount;
+		resolution >>= 1u;
+	}
+
+	return totalSize;
+}
+
 Result SlimKTX2::parse(IOHandle _file)
 {
 	clear();
@@ -43,7 +84,7 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	const uint32_t levels = m_header.levelCount != 0u ? m_header.levelCount : 1u;
+	const uint32_t levels = getLevelCount();
 	const size_t levelIndexSize = sizeof(LevelIndex) * levels;
 
 	m_pLevels = static_cast<LevelIndex*>(allocate(levelIndexSize));
@@ -57,6 +98,57 @@ Result SlimKTX2::parse(IOHandle _file)
 }
 
 Result SlimKTX2::serialize(IOHandle _file)
+{
+	return Result();
+}
+
+uint32_t SlimKTX2::getLevelCount() const
+{
+	return m_header.levelCount != 0u ? m_header.levelCount : 1u;
+}
+
+uint32_t SlimKTX2::getLayerCount() const
+{
+	return m_header.layerCount != 0u ? m_header.layerCount : 1u;
+}
+
+const Header& SlimKTX2::getHeader() const
+{
+	return m_header;
+}
+
+Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount, uint32_t _faceCount, uint32_t _depth, uint32_t _layerCount)
+{
+	m_header.vkFormat = _vkFormat;
+	m_header.typeSize = getTypeSize(_vkFormat);
+	m_header.pixelWidth = _width;
+	m_header.pixelHeight = _height;
+	m_header.pixelDepth = _depth;
+	m_header.layerCount = _layerCount;
+	m_header.faceCount = _faceCount;
+	m_header.levelCount = _levelCount;
+	m_header.supercompressionScheme = 0u;
+	
+	memcpy(m_header.identifier, Header::Magic, sizeof(m_header.identifier));
+
+	return Result();
+}
+
+Result SlimKTX2::allocateContainer()
+{
+	if (m_pContainer != nullptr)
+	{
+		free(m_pContainer);
+	}
+
+	const uint64_t size = getContainerSize(m_header);
+
+	m_pContainer = static_cast<uint8_t*>(allocate(size));
+	
+	return Result();
+}
+
+Result SlimKTX2::setImage(void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer)
 {
 	return Result();
 }
@@ -81,7 +173,7 @@ void SlimKTX2::write(IOHandle _file, const void* _pData, size_t _size)
 	m_callbacks.write(m_callbacks.userData, _file, _pData, _size);
 }
 
-size_t SlimKTX2::tell(IOHandle _file)
+size_t SlimKTX2::tell(const IOHandle _file)
 {
 	return m_callbacks.tell(m_callbacks.userData, _file);
 }
