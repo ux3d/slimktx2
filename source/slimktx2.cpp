@@ -204,7 +204,7 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 		return Result::InvalidFaceIndex;
 	}
 
-	if (_byteSize != m_pLevels[_level].byteLength)
+	if (_byteSize != m_pLevels[_level].byteLength / m_header.faceCount)
 	{
 		return Result::InvalidImageSize;
 	}
