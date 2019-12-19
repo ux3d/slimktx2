@@ -1,23 +1,5 @@
 cmake_minimum_required(VERSION 3.10.0 FATAL_ERROR)
 
-macro(add_sources expression sources)
-	file(GLOB source_files RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "${expression}")
-	set(${sources} "${${sources}};${source_files}")
-endmacro()
-
-macro(add_include_folder include_folder includes)
-	set(${includes} "${${includes}};${CMAKE_CURRENT_LIST_DIR}/${include_folder}")
-endmacro()
-
-function(cmake_option option description default)
-	option(${option} description ${default})
-	if(${option})
-		message(STATUS "'${option}' is TRUE")
-	else()
-		message(STATUS "'${option}' is FALSE")
-	endif()
-endfunction()
-
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -34,13 +16,15 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 #this project
 project(slimktx2)
 
+macro(add_sources expression sources)
+	file(GLOB source_files RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "${expression}")
+	set(${sources} "${${sources}};${source_files}")
+endmacro()
+
 #lib sources
 add_sources("source/*.cpp" "lib_sources")
 add_sources("include/*.h" "lib_sources")
-#set(lib_sources "${lib_sources};)
-#set(lib_includes "${lib_includes};)
-add_include_folder("include" "lib_includes")
 
 #lib project
-add_library(lib SHARED ${lib_sources} ${lib_includes})
-target_include_directories(lib PUBLIC "${lib_includes}")
+add_library(${PROJECT_NAME} SHARED ${lib_sources})
+target_include_directories(${PROJECT_NAME} PUBLIC "include")
