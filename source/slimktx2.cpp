@@ -136,6 +136,7 @@ const Header& SlimKTX2::getHeader() const
 
 Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount, uint32_t _faceCount, uint32_t _depth, uint32_t _layerCount)
 {
+	memcpy(m_header.identifier, Header::Magic, sizeof(m_header.identifier));
 	m_header.vkFormat = _vkFormat;
 	m_header.typeSize = getTypeSize(_vkFormat);
 	m_header.pixelWidth = _width;
@@ -145,8 +146,30 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	m_header.faceCount = _faceCount;
 	m_header.levelCount = _levelCount;
 	m_header.supercompressionScheme = 0u;
-	
-	memcpy(m_header.identifier, Header::Magic, sizeof(m_header.identifier));
+
+	// compression and sections index are not used
+
+	const uint32_t levelCount = getLevelCount();
+	const size_t levelIndexSize = sizeof(LevelIndex) * levelCount;
+
+	m_pLevels = static_cast<LevelIndex*>(allocate(levelIndexSize));
+	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+
+	uint32_t offset = sizeof(Header) + sizeof(SectionIndex) + levelIndexSize;
+
+	for (uint32_t level = 0u; level < levelCount; ++level)
+	{
+		offset = (8u - (offset % 8u)) % 8u;
+
+		const uint32_t pixelCount = getPixelCount(level);
+		const uint32_t levelSize = pixelCount * pixelSize * m_header.faceCount;
+
+		m_pLevels[level].byteOffset = offset;
+		m_pLevels[level].byteLength = levelSize;
+		m_pLevels[level].uncompressedByteLength = levelSize;
+
+		offset += levelSize;
+	}
 
 	return Result::Success;
 }
