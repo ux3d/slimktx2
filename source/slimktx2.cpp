@@ -116,7 +116,17 @@ Result SlimKTX2::parse(IOHandle _file)
 
 Result SlimKTX2::serialize(IOHandle _file)
 {
-	return Result::NotImplemented;
+	write(_file, &m_header, sizeof(Header));
+	write(_file, &m_sections, sizeof(SectionIndex));
+
+	for (uint32_t level = 0u; level < m_header.levelCount; ++level)
+	{
+		write(_file, &m_pLevels[level], sizeof(LevelIndex));
+	}
+
+	write(_file, m_pContainer, getContainerSize());
+
+	return Result::Success;
 }
 
 uint32_t SlimKTX2::getLevelCount() const
