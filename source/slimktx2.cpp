@@ -190,26 +190,23 @@ Result SlimKTX2::allocateContainer()
 
 Result SlimKTX2::setImage(void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer)
 {
-	uint64_t offset = 0u;
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+	if (_level >= m_header.levelCount)
+	{
+		return Result::InvalidLevelIndex;
+	}
+	if (_face >= m_header.faceCount)
+	{
+		return Result::InvalidFaceIndex;
+	}
 
-	uint32_t resolution = m_header.pixelWidth * m_header.pixelHeight * m_header.pixelDepth;
-
-	const uint32_t imageSize = resolution >> _level;
-
-	if (_byteSize != imageSize)
+	if (_byteSize != m_pLevels[_level].byteLength)
 	{
 		return Result::InvalidImageSize;
 	}
 
-	for (uint32_t level = 0u; level < _level; ++level, resolution >>= 1u)
-	{
-		offset += resolution * pixelSize * _level * _face;
-	}
+	uint8_t* pDestination = m_pContainer + m_pLevels[_level].byteOffset;
 
-	uint8_t* pDst = m_pContainer + offset;
-
-	memcpy(pDst, _pData, _byteSize);
+	memcpy(pDestination, _pData, _byteSize);
 
 	return Result::Success;
 }
