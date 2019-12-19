@@ -188,7 +188,7 @@ Result SlimKTX2::allocateContainer()
 	return Result::Success;
 }
 
-Result SlimKTX2::setImage(void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer)
+Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer)
 {
 	if (_level >= m_header.levelCount)
 	{

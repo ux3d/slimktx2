@@ -123,7 +123,7 @@ namespace ux3d
 			Result allocateContainer();
 
 			// copy image data to container (that was allocated by allocateContainer)
-			Result setImage(void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer);
+			Result setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer);
 
 			// free allocated memory, clear members
 			void clear();
