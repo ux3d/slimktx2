@@ -81,6 +81,7 @@ namespace ux3d
 		enum class Result : uint32_t
 		{
 			Success = 0u,
+			NotImplemented,
 			IOReadFail,
 			InvalidIdentifier,
 			InvalidImageSize, // setImage _byteSize does not match information of specifyFormat

@@ -83,8 +83,8 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	const uint32_t levels = getLevelCount();
-	const size_t levelIndexSize = sizeof(LevelIndex) * levels;
+	const uint32_t levelCount = getLevelCount();
+	const size_t levelIndexSize = sizeof(LevelIndex) * levelCount;
 
 	m_pLevels = static_cast<LevelIndex*>(allocate(levelIndexSize));
 
@@ -98,7 +98,7 @@ Result SlimKTX2::parse(IOHandle _file)
 
 Result SlimKTX2::serialize(IOHandle _file)
 {
-	return Result();
+	return Result::NotImplemented;
 }
 
 uint32_t SlimKTX2::getLevelCount() const
@@ -130,7 +130,7 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	
 	memcpy(m_header.identifier, Header::Magic, sizeof(m_header.identifier));
 
-	return Result();
+	return Result::Success;
 }
 
 Result SlimKTX2::allocateContainer()
@@ -144,7 +144,7 @@ Result SlimKTX2::allocateContainer()
 
 	m_pContainer = static_cast<uint8_t*>(allocate(size));
 	
-	return Result();
+	return Result::Success;
 }
 
 Result SlimKTX2::setImage(void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer)
@@ -170,7 +170,7 @@ Result SlimKTX2::setImage(void* _pData, size_t _byteSize, uint32_t _level, uint3
 
 	memcpy(pDst, _pData, _byteSize);
 
-	return Result();
+	return Result::Success;
 }
 
 void* SlimKTX2::allocate(size_t _size)
