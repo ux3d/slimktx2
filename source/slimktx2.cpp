@@ -48,20 +48,38 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	}
 }
 
-uint64_t ux3d::slimktx2::SlimKTX2::getContainerSize(const Header& _header)
+uint64_t ux3d::slimktx2::SlimKTX2::getContainerSize() const
 {
 	uint64_t totalSize = 0u;
-	const uint32_t pixelSize = getPixelSize(_header.vkFormat);
+	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 
-	uint32_t resolution = _header.pixelWidth * _header.pixelHeight * _header.pixelDepth;
-	for (uint32_t level = 0u; level < _header.levelCount; ++level, resolution >>= 1u)
+	for (uint32_t level = 0u; level < m_header.levelCount; ++level)
 	{
-		uint64_t levelSize = resolution * pixelSize * _header.layerCount * _header.faceCount;
+		uint64_t levelSize = getPixelCount(level) * pixelSize * m_header.layerCount * m_header.faceCount;
 		uint32_t padding = (8u - (levelSize % 8u)) % 8u;
 		totalSize += levelSize + padding;
 	}
 
 	return totalSize;
+}
+
+uint32_t SlimKTX2::getPixelCount(uint32_t _level) const
+{
+	uint32_t maxLevel = m_header.levelCount - 1;
+	_level = maxLevel - _level;
+
+	uint32_t result = m_header.pixelWidth >> _level;
+
+	if (m_header.pixelHeight != 0u)
+	{
+		result *= m_header.pixelHeight >> _level;
+	}
+	if (m_header.pixelDepth != 0u)
+	{
+		result *= m_header.pixelDepth >> _level;
+	}
+
+	return result;
 }
 
 Result SlimKTX2::parse(IOHandle _file)
@@ -140,7 +158,7 @@ Result SlimKTX2::allocateContainer()
 		free(m_pContainer);
 	}
 
-	const uint64_t size = getContainerSize(m_header);
+	const uint64_t size = getContainerSize();
 
 	m_pContainer = static_cast<uint8_t*>(allocate(size));
 	

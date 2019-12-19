@@ -108,9 +108,15 @@ namespace ux3d
 			uint32_t getLayerCount() const;
 			const Header& getHeader() const;
 
+			// computes total bytesize of all image data (no header, sections etc)
+			uint64_t getContainerSize() const;
+
+			// computes the pixel count of an image of the given level
+			uint32_t getPixelCount(uint32_t _level) const;
+
 			// fills header and locks format/data-layout for addImage
 			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 1u, uint32_t _layerCount = 1u);
-			
+
 			// allocates all image memory required for setImage
 			Result allocateContainer();
 
@@ -125,9 +131,6 @@ namespace ux3d
 
 			// as defined by vulkan (pixel size)
 			static uint32_t getPixelSize(Format _vkFormat);
-
-			// computes total bytesize of all image data (no header, sections etc)
-			static uint64_t getContainerSize(const Header& _header);
 
 		private:
 
