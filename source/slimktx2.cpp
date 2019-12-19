@@ -188,6 +188,11 @@ Result SlimKTX2::allocateContainer()
 	return Result::Success;
 }
 
+uint8_t* ux3d::slimktx2::SlimKTX2::getContainerPointer()
+{
+	return m_pContainer;
+}
+
 Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer)
 {
 	if (_level >= m_header.levelCount)

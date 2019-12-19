@@ -122,6 +122,9 @@ namespace ux3d
 			// allocates all image memory required for setImage
 			Result allocateContainer();
 
+			//returns pointer to container
+			uint8_t* getContainerPointer();
+
 			// copy image data to container (that was allocated by allocateContainer)
 			Result setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer);
 
