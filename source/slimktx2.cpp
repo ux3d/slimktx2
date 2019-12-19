@@ -30,6 +30,8 @@ uint32_t SlimKTX2::getTypeSize(Format _vkFormat)
 	{
 	case Format::UNDEFINED:
 		return 1u;
+	case Format::R16G16B16A16_SFLOAT:
+		return 2u;
 	default:
 		return 0u; // invalid
 	}
