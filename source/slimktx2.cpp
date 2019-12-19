@@ -140,8 +140,8 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	m_header.vkFormat = _vkFormat;
 	m_header.typeSize = getTypeSize(_vkFormat);
 	m_header.pixelWidth = _width;
-	m_header.pixelHeight = _height;
-	m_header.pixelDepth = _depth;
+	m_header.pixelHeight = _height == 1u ? 0u : _height;
+	m_header.pixelDepth = _depth == 1u ? 0u : _depth;
 	m_header.layerCount = _layerCount;
 	m_header.faceCount = _faceCount;
 	m_header.levelCount = _levelCount;
