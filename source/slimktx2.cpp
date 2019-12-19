@@ -56,7 +56,9 @@ uint64_t ux3d::slimktx2::SlimKTX2::getContainerSize(const Header& _header)
 	uint32_t resolution = _header.pixelWidth * _header.pixelHeight * _header.pixelDepth;
 	for (uint32_t level = 0u; level < _header.levelCount; ++level, resolution >>= 1u)
 	{
-		totalSize += resolution * pixelSize * _header.layerCount * _header.faceCount;
+		uint64_t levelSize = resolution * pixelSize * _header.layerCount * _header.faceCount;
+		uint32_t padding = (8u - (levelSize % 8u)) % 8u;
+		totalSize += levelSize + padding;
 	}
 
 	return totalSize;
