@@ -73,7 +73,7 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	if (memcmp(m_header.identifier, Header::Magic, sizeof(m_header.identifier) != 0))
+	if (memcmp(m_header.identifier, Header::Magic, sizeof(m_header.identifier)) != 0)
 	{
 		return Result::InvalidIdentifier;
 	}
