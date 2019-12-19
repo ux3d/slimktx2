@@ -9,7 +9,6 @@ namespace ux3d
 {
 	namespace slimktx2
 	{
-
 		using AllocationFunc = void*(*)(void* _pUserData, size_t _size);
 		using FreeFunc = void(*)(void* _pUserData, void* _pData);
 
@@ -42,7 +41,7 @@ namespace ux3d
 
 		enum class Format : uint32_t
 		{
-			UNDEFINED = 0,
+			UNDEFINED = 0u,
 			R16G16B16A16_SFLOAT = 97u, //VK_FORMAT_R16G16B16A16_SFLOAT
 		};
 
@@ -87,7 +86,7 @@ namespace ux3d
 			InvalidImageSize, // setImage _byteSize does not match information of specifyFormat
 		};
 
-		/// Serialization API:
+		// Serialization API:
 
 		// SlimKTX2 ktx(callbacks);
 		// ktx.specifyFormat(Format::R16G16B16A16_SFLOAT, 1024, 1024);

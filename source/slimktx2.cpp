@@ -31,10 +31,8 @@ uint32_t SlimKTX2::getTypeSize(Format _vkFormat)
 	case Format::UNDEFINED:
 		return 1u;
 	default:
-		break;
+		return 0u; // invalid
 	}
-
-	return 0u; // invalid
 }
 
 uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
@@ -44,10 +42,8 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	case Format::R16G16B16A16_SFLOAT:
 		return 8u;
 	default:
-		break;
+		return 0u; // invalid
 	}
-
-	return 0u; // invalid
 }
 
 uint64_t ux3d::slimktx2::SlimKTX2::getContainerSize(const Header& _header)
