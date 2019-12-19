@@ -159,7 +159,7 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 
 	for (uint32_t level = 0u; level < levelCount; ++level)
 	{
-		offset = (8u - (offset % 8u)) % 8u;
+		offset += (8u - (offset % 8u)) % 8u;
 
 		const uint32_t pixelCount = getPixelCount(level);
 		const uint32_t levelSize = pixelCount * pixelSize * m_header.faceCount;
