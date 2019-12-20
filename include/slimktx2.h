@@ -103,8 +103,11 @@ namespace ux3d
 		class SlimKTX2
 		{
 		public:
+			SlimKTX2() = default;
 			SlimKTX2(const Callbacks& _callbacks);
 			~SlimKTX2();
+
+			void setCallbacks(const Callbacks& _callbacks);
 
 			Result parse(IOHandle _file);
 

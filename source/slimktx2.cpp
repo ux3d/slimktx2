@@ -15,6 +15,11 @@ SlimKTX2::~SlimKTX2()
 	clear();
 }
 
+void ux3d::slimktx2::SlimKTX2::setCallbacks(const Callbacks& _callbacks)
+{
+	m_callbacks = _callbacks;
+}
+
 void SlimKTX2::clear()
 {
 	if (m_pLevels != nullptr)
