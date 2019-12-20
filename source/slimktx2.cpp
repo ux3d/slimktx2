@@ -1,4 +1,4 @@
-// Copyright (c) 2019 UX3D GmbH. All rights reserved.
+﻿// Copyright (c) 2019 UX3D GmbH. All rights reserved.
 
 #include "slimktx2.h"
 #include <stdarg.h>
@@ -54,35 +54,46 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	}
 }
 
-uint64_t ux3d::slimktx2::SlimKTX2::getContainerSize() const
+uint64_t SlimKTX2::getPaddedImageSize(uint32_t _pixelByteSize, uint32_t _maxLevel, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount)
 {
-	uint64_t totalSize = 0u;
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+	const uint32_t resolution = getPixelCount((_maxLevel - 1u) - _level, _width, _height, _depth);
+	const uint64_t levelSize = resolution * _pixelByteSize * _faceCount * _layerCount;
+	const uint32_t padding = (8u - (levelSize % 8u)) % 8u;
 
-	for (uint32_t level = 0u; level < m_header.levelCount; ++level)
-	{
-		uint64_t levelSize = getPixelCount(level) * pixelSize * m_header.layerCount * m_header.faceCount;
-		uint32_t padding = (8u - (levelSize % 8u)) % 8u;
-		totalSize += levelSize + padding;
-	}
-
-	return totalSize;
+	return levelSize + padding;
 }
 
-uint32_t SlimKTX2::getPixelCount(uint32_t _level) const
+uint64_t SlimKTX2::getLevelContainerImageOffset(uint32_t _pixelByteSize, uint32_t _maxLevel, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount)
 {
-	uint32_t maxLevel = m_header.levelCount - 1;
-	_level = maxLevel - _level;
+	uint64_t offset = 0u;
 
-	uint32_t result = m_header.pixelWidth >> _level;
-
-	if (m_header.pixelHeight != 0u)
+	//  Mip level data is ordered from the level with the smallest size images, levelp to that with the largest size images, levelbase where p=levelCount−1 and base=0. levelp must not be greater than the maximum possible
+	for (uint32_t level = 0u; level < _level; ++level)
 	{
-		result *= m_header.pixelHeight >> _level;
+		// image contains all faces (1-6) and all layers
+		const uint64_t levelSize = getPaddedImageSize(_pixelByteSize, _maxLevel, level, _width, _height, _depth, _faceCount, _layerCount);
+		offset += levelSize;
 	}
-	if (m_header.pixelDepth != 0u)
+
+	return offset;
+}
+
+uint64_t SlimKTX2::getLevelContainerSize(const Header& _header)
+{
+	return getLevelContainerImageOffset(getPixelSize(_header.vkFormat), _header.levelCount, _header.levelCount, _header.pixelWidth, _header.pixelHeight, _header.pixelDepth, _header.faceCount, _header.layerCount);
+}
+
+uint32_t SlimKTX2::getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
+{
+	uint32_t result = _width >> _level;
+
+	if (_height != 0u)
 	{
-		result *= m_header.pixelDepth >> _level;
+		result *= _height >> _level;
+	}
+	if (_depth != 0u)
+	{
+		result *= _depth >> _level;
 	}
 
 	return result;
@@ -124,13 +135,11 @@ Result SlimKTX2::serialize(IOHandle _file)
 {
 	write(_file, &m_header, sizeof(Header));
 	write(_file, &m_sections, sizeof(SectionIndex));
+	write(_file, m_pLevels, sizeof(LevelIndex) * m_header.levelCount);
 
-	for (uint32_t level = 0u; level < m_header.levelCount; ++level)
-	{
-		write(_file, &m_pLevels[level], sizeof(LevelIndex));
-	}
+	// TODO: write dfd, kvd and sgd
 
-	write(_file, m_pContainer, getContainerSize());
+	write(_file, m_pContainer, getLevelContainerSize(m_header));
 
 	return Result::Success;
 }
@@ -152,6 +161,11 @@ const Header& SlimKTX2::getHeader() const
 
 Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount, uint32_t _faceCount, uint32_t _depth, uint32_t _layerCount)
 {
+	if (m_pLevels != nullptr)
+	{
+		free(m_pLevels);
+	}
+
 	memcpy(m_header.identifier, Header::Magic, sizeof(m_header.identifier));
 	m_header.vkFormat = _vkFormat;
 	m_header.typeSize = getTypeSize(_vkFormat);
@@ -171,45 +185,71 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	m_pLevels = static_cast<LevelIndex*>(allocate(levelIndexSize));
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 
-	uint32_t offset = sizeof(Header) + sizeof(SectionIndex) + levelIndexSize;
+	const uint64_t offset = sizeof(Header) +
+		sizeof(SectionIndex) + levelIndexSize +
+		m_sections.dfdByteOffset + m_sections.dfdByteLength +
+		m_sections.kvdByteOffset + m_sections.kvdByteLength + // what about align(8) ?
+		m_sections.sgdByteOffset + m_sections.sgdByteLength;
 
 	for (uint32_t level = 0u; level < levelCount; ++level)
 	{
-		offset += (8u - (offset % 8u)) % 8u;
-
-		const uint32_t pixelCount = getPixelCount(level);
-		const uint32_t levelSize = pixelCount * pixelSize * m_header.faceCount;
-
-		m_pLevels[level].byteOffset = offset;
-		m_pLevels[level].byteLength = levelSize;
-		m_pLevels[level].uncompressedByteLength = levelSize;
-
-		offset += levelSize;
+		// absolute offset within the file
+		m_pLevels[level].byteOffset = offset + getLevelContainerImageOffset(pixelSize, levelCount, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
+		m_pLevels[level].byteLength = getPaddedImageSize(pixelSize, levelCount, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
+		m_pLevels[level].uncompressedByteLength = m_pLevels[level].byteLength; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
 	}
 
 	return Result::Success;
 }
 
-Result SlimKTX2::allocateContainer()
+Result SlimKTX2::allocateLevelContainer()
 {
 	if (m_pContainer != nullptr)
 	{
 		free(m_pContainer);
 	}
 
-	const uint64_t size = getContainerSize();
+	const uint64_t size = getLevelContainerSize(m_header);
 
 	m_pContainer = static_cast<uint8_t*>(allocate(size));
 	
 	return Result::Success;
 }
 
-uint8_t* ux3d::slimktx2::SlimKTX2::getContainerPointer()
+uint8_t* SlimKTX2::getLevelContainerPointer()
 {
 	return m_pContainer;
 }
 
 Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer)
+{
+	Result res = Result::Success;
+
+	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+	const uint32_t maxLevel = getLevelCount();
+
+	const uint64_t imageSize = m_pLevels[_level].byteLength / m_header.faceCount / m_header.layerCount;
+
+	// for debugging: size of one mip level image
+	const uint64_t paddedImageSize = getPaddedImageSize(pixelSize, maxLevel, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, 1u, 1u);
+
+	if (_byteSize != imageSize || _byteSize != paddedImageSize)
+	{
+		return Result::InvalidImageSize;
+	}
+
+	uint8_t* pDst = nullptr;
+	if ((res = getImage(pDst, _level, _face, _layer, _byteSize)) != Result::Success)
+	{
+		return res;
+	}
+
+	memcpy(pDst, _pData, _byteSize);
+
+	return res;
+}
+
+Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _face, uint32_t _layer, uint64_t _imageSize)
 {
 	if (_level >= m_header.levelCount)
 	{
@@ -219,15 +259,28 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 	{
 		return Result::InvalidFaceIndex;
 	}
-
-	if (_byteSize != m_pLevels[_level].byteLength / m_header.faceCount)
+	if (_layer >= m_header.layerCount)
 	{
-		return Result::InvalidImageSize;
+		return Result::InvalidLayerIndex;
 	}
 
-	uint8_t* pDestination = m_pContainer + m_pLevels[_level].byteOffset;
+	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+	const uint32_t maxLevel = getLevelCount();
+	const uint64_t offset = getLevelContainerImageOffset(pixelSize, maxLevel, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
 
-	memcpy(pDestination, _pData, _byteSize);
+	if (_imageSize != 0u) 
+	{
+		// for debugging
+		const uint64_t containerSize = getLevelContainerSize(m_header);
+
+		// offset / image out of container bounds
+		if (offset + _imageSize >= containerSize)
+		{
+			return Result::InvalidImageSize;
+		}
+	}
+
+	_outImageData = m_pContainer + offset;
 
 	return Result::Success;
 }

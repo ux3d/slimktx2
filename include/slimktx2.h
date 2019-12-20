@@ -86,7 +86,8 @@ namespace ux3d
 			InvalidIdentifier,
 			InvalidImageSize, // setImage _byteSize does not match information of specifyFormat
 			InvalidLevelIndex,
-			InvalidFaceIndex
+			InvalidFaceIndex,
+			InvalidLayerIndex
 		};
 
 		// Serialization API:
@@ -110,23 +111,21 @@ namespace ux3d
 			uint32_t getLayerCount() const;
 			const Header& getHeader() const;
 
-			// computes total bytesize of all image data (no header, sections etc)
-			uint64_t getContainerSize() const;
-
-			// computes the pixel count of an image of the given level
-			uint32_t getPixelCount(uint32_t _level) const;
 
 			// fills header and locks format/data-layout for addImage
 			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 1u, uint32_t _layerCount = 1u);
 
 			// allocates all image memory required for setImage
-			Result allocateContainer();
+			Result allocateLevelContainer();
 
 			//returns pointer to container
-			uint8_t* getContainerPointer();
+			uint8_t* getLevelContainerPointer();
 
 			// copy image data to container (that was allocated by allocateContainer)
 			Result setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer);
+
+			// _imageSize is used for validation if _imageSize != 0u
+			Result getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _face, uint32_t _layer, uint64_t _imageSize = 0u);
 
 			// free allocated memory, clear members
 			void clear();
@@ -136,6 +135,15 @@ namespace ux3d
 
 			// as defined by vulkan (pixel size)
 			static uint32_t getPixelSize(Format _vkFormat);
+
+			static uint64_t getPaddedImageSize(uint32_t _pixelByteSize, uint32_t _maxLevel, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u, uint32_t _faceCount = 1u, uint32_t _layerCount = 1u);
+
+			static uint64_t getLevelContainerImageOffset(uint32_t _pixelByteSize, uint32_t _maxLevel, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount);
+
+			static uint64_t getLevelContainerSize(const Header& _header);
+
+			// computes the pixel count (resolution) of an image of the given level
+			static uint32_t getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth);
 
 		private:
 
