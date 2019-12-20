@@ -123,6 +123,8 @@ namespace ux3d
 			// allocates all image memory required for setImage
 			Result allocateLevelContainer();
 
+			uint64_t getLevelContainerSize() const;
+
 			//returns pointer to container
 			uint8_t* getLevelContainerPointer();
 
@@ -141,11 +143,9 @@ namespace ux3d
 			// as defined by vulkan (pixel size)
 			static uint32_t getPixelSize(Format _vkFormat);
 
-			static uint64_t getPaddedImageSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u, uint32_t _faceCount = 1u, uint32_t _layerCount = 1u);
+			static uint64_t getImageSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u, uint32_t _faceCount = 1u, uint32_t _layerCount = 1u);
 
 			static uint64_t getLevelContainerImageOffset(uint32_t _pixelByteSize, uint32_t _levelCount, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount);
-
-			static uint64_t getLevelContainerSize(const Header& _header);
 
 			// computes the pixel count (resolution) of an image of the given level
 			static uint32_t getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth);
@@ -161,6 +161,9 @@ namespace ux3d
 			bool seek(IOHandle _file, size_t _offset);
 
 			void log(const char* _pFormat, ...);
+
+			// revese _level
+			uint32_t getKTXLevel(uint32_t _level) const;
 
 		private:
 			Callbacks m_callbacks{};
