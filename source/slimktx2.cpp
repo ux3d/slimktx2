@@ -6,6 +6,18 @@
 
 using namespace ux3d::slimktx2;
 
+template <class T>
+decltype(auto) max(T x, T y) { return x > y ? x : y; }
+
+template <class T>
+decltype(auto) max(T x, T y, T z) { return max(max(x,y),z); }
+
+template <class T>
+decltype(auto) min(T x, T y) { return x < y ? x : y; }
+
+template <class T>
+decltype(auto) min(T x, T y, T z) { return min(min(x, y), z); }
+
 SlimKTX2::SlimKTX2(const Callbacks& _callbacks) : m_callbacks(_callbacks)
 {
 }
@@ -180,7 +192,18 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	m_header.pixelDepth = _depth == 1u ? 0u : _depth;
 	m_header.layerCount = _layerCount;
 	m_header.faceCount = _faceCount;
-	m_header.levelCount = _levelCount;
+
+	uint32_t maxDim = max(_width, _height, _depth);
+	uint32_t maxLevel = 0u;
+
+	// compute maximum number of mip levels for the specified resolution
+	while (maxDim > 0u)
+	{
+		maxDim >>= 1u;
+		++maxLevel;
+	}
+
+	m_header.levelCount = min(maxLevel, _levelCount);
 	m_header.supercompressionScheme = 0u;
 
 	// compression and sections index are not used
