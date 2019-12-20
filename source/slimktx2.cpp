@@ -214,7 +214,7 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	m_pLevels = static_cast<LevelIndex*>(allocate(levelIndexSize));
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 
-	const uint64_t offset = sizeof(Header) +
+	uint64_t offset = sizeof(Header) +
 		sizeof(SectionIndex) + levelIndexSize +
 		m_sections.dfdByteLength +
 		m_sections.kvdByteLength + // what about align(8) ?
@@ -224,8 +224,10 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	{
 		const uint64_t levelSize = getPaddedImageSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
 
+		offset += levelSize;
+
 		// absolute offset within the file
-		m_pLevels[level].byteOffset = offset + levelSize;
+		m_pLevels[level].byteOffset = offset;
 		m_pLevels[level].byteLength = levelSize;
 		m_pLevels[level].uncompressedByteLength = levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
 	}
