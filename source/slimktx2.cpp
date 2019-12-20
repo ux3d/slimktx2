@@ -54,24 +54,25 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	}
 }
 
-uint64_t SlimKTX2::getPaddedImageSize(uint32_t _pixelByteSize, uint32_t _maxLevel, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount)
+uint64_t SlimKTX2::getPaddedImageSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount)
 {
-	const uint32_t resolution = getPixelCount((_maxLevel - 1u) - _level, _width, _height, _depth);
+	const uint32_t resolution = getPixelCount(_level, _width, _height, _depth);
 	const uint64_t levelSize = resolution * _pixelByteSize * _faceCount * _layerCount;
 	const uint32_t padding = (8u - (levelSize % 8u)) % 8u;
 
 	return levelSize + padding;
 }
 
-uint64_t SlimKTX2::getLevelContainerImageOffset(uint32_t _pixelByteSize, uint32_t _maxLevel, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount)
+uint64_t SlimKTX2::getLevelContainerImageOffset(uint32_t _pixelByteSize, uint32_t _levelCount, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount)
 {
 	uint64_t offset = 0u;
 
-	//  Mip level data is ordered from the level with the smallest size images, levelp to that with the largest size images, levelbase where p=levelCount−1 and base=0. levelp must not be greater than the maximum possible
-	for (uint32_t level = 0u; level < _level; ++level)
+	// Mip level data is ordered from the level with the smallest size images, levelp to that with the largest size images, levelbase where p=levelCount−1 and base=0. levelp must not be greater than the maximum possible
+	// -> we go in reverse order from small mip levels to big
+	for (uint32_t level = _levelCount - 1u; level >= 0u; --level)
 	{
 		// image contains all faces (1-6) and all layers
-		const uint64_t levelSize = getPaddedImageSize(_pixelByteSize, _maxLevel, level, _width, _height, _depth, _faceCount, _layerCount);
+		const uint64_t levelSize = getPaddedImageSize(_pixelByteSize, level, _width, _height, _depth, _faceCount, _layerCount);
 		offset += levelSize;
 	}
 
@@ -191,12 +192,14 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 		m_sections.kvdByteOffset + m_sections.kvdByteLength + // what about align(8) ?
 		m_sections.sgdByteOffset + m_sections.sgdByteLength;
 
-	for (uint32_t level = 0u; level < levelCount; ++level)
+	for (uint32_t level = levelCount - 1u; level >= 0u; --level)
 	{
+		const uint64_t levelSize = getPaddedImageSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
+
 		// absolute offset within the file
-		m_pLevels[level].byteOffset = offset + getLevelContainerImageOffset(pixelSize, levelCount, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
-		m_pLevels[level].byteLength = getPaddedImageSize(pixelSize, levelCount, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
-		m_pLevels[level].uncompressedByteLength = m_pLevels[level].byteLength; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
+		m_pLevels[level].byteOffset = offset + levelSize;
+		m_pLevels[level].byteLength = levelSize;
+		m_pLevels[level].uncompressedByteLength = levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
 	}
 
 	return Result::Success;
@@ -231,7 +234,7 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 	const uint64_t imageSize = m_pLevels[_level].byteLength / m_header.faceCount / m_header.layerCount;
 
 	// for debugging: size of one mip level image
-	const uint64_t paddedImageSize = getPaddedImageSize(pixelSize, maxLevel, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, 1u, 1u);
+	const uint64_t paddedImageSize = getPaddedImageSize(pixelSize, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, 1u, 1u);
 
 	if (_byteSize != imageSize || _byteSize != paddedImageSize)
 	{
@@ -265,8 +268,8 @@ Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _fa
 	}
 
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-	const uint32_t maxLevel = getLevelCount();
-	const uint64_t offset = getLevelContainerImageOffset(pixelSize, maxLevel, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
+	const uint32_t levelCount = getLevelCount();
+	const uint64_t offset = getLevelContainerImageOffset(pixelSize, levelCount, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth, m_header.faceCount, m_header.layerCount);
 
 	if (_imageSize != 0u) 
 	{

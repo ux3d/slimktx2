@@ -95,7 +95,10 @@ namespace ux3d
 		// SlimKTX2 ktx(callbacks);
 		// ktx.specifyFormat(Format::R16G16B16A16_SFLOAT, 1024, 1024);
 		// ktx.allocateContainer();
-		// ktx.setImage(
+		// ktx.setImage()
+
+		// ktx internally stores mip levels in order from small to total (pixelWidth * pixelHeight) size
+		// SlimKTX2 hides this and exposes mip levels like in most GPU APIs where level 0 contains the full image of pixelWidth * pixelHeight, and level 1 half-size image and so on
 
 		class SlimKTX2
 		{
@@ -110,7 +113,6 @@ namespace ux3d
 			uint32_t getLevelCount() const;
 			uint32_t getLayerCount() const;
 			const Header& getHeader() const;
-
 
 			// fills header and locks format/data-layout for addImage
 			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 1u, uint32_t _layerCount = 1u);
@@ -136,9 +138,9 @@ namespace ux3d
 			// as defined by vulkan (pixel size)
 			static uint32_t getPixelSize(Format _vkFormat);
 
-			static uint64_t getPaddedImageSize(uint32_t _pixelByteSize, uint32_t _maxLevel, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u, uint32_t _faceCount = 1u, uint32_t _layerCount = 1u);
+			static uint64_t getPaddedImageSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u, uint32_t _faceCount = 1u, uint32_t _layerCount = 1u);
 
-			static uint64_t getLevelContainerImageOffset(uint32_t _pixelByteSize, uint32_t _maxLevel, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount);
+			static uint64_t getLevelContainerImageOffset(uint32_t _pixelByteSize, uint32_t _levelCount, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount);
 
 			static uint64_t getLevelContainerSize(const Header& _header);
 
@@ -162,6 +164,8 @@ namespace ux3d
 
 			Header m_header{};
 			SectionIndex m_sections{};
+
+			// in KTX mip level 0 is the smallest, so m_pLevels[0] contains the image with (resolution >> levelCount) pixels
 			LevelIndex* m_pLevels = nullptr;
 
 			uint8_t* m_pContainer = nullptr;
