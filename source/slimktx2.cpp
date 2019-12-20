@@ -193,9 +193,9 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 
 	const uint64_t offset = sizeof(Header) +
 		sizeof(SectionIndex) + levelIndexSize +
-		m_sections.dfdByteOffset + m_sections.dfdByteLength +
-		m_sections.kvdByteOffset + m_sections.kvdByteLength + // what about align(8) ?
-		m_sections.sgdByteOffset + m_sections.sgdByteLength;
+		m_sections.dfdByteLength +
+		m_sections.kvdByteLength + // what about align(8) ?
+		m_sections.sgdByteLength;
 
 	for (uint32_t level = levelCount - 1u; level >= 0u; --level)
 	{
