@@ -22,6 +22,12 @@ void SlimKTX2::clear()
 		free(m_pLevels);
 		m_pLevels = nullptr;
 	}
+
+	if (m_pContainer != nullptr)
+	{
+		free(m_pContainer);
+		m_pContainer = nullptr;
+	}
 }
 
 uint32_t SlimKTX2::getTypeSize(Format _vkFormat)
