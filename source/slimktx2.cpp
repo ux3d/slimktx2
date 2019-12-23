@@ -271,7 +271,7 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	{
 		uint64_t levelSize = getFaceSize(pixelSize, level, levelCount, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= m_header.faceCount;
-		levelSize *= m_header.layerCount;
+		levelSize *= getLayerCount();
 
 		// absolute offset within the file
 		m_pLevels[level].byteOffset = offset;
@@ -330,7 +330,7 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 	}
 
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-	const uint64_t imageSize = m_pLevels[_level].byteLength / m_header.faceCount / m_header.layerCount;
+	const uint64_t imageSize = m_pLevels[_level].byteLength / m_header.faceCount / getLayerCount();
 
 	// for debugging: size of one mip level image
 	const uint64_t dbgSize = getFaceSize(pixelSize, _level, getLevelCount(),  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
@@ -366,7 +366,7 @@ Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _fa
 	{
 		return Result::InvalidFaceIndex;
 	}
-	if (_layer >= m_header.layerCount)
+	if (_layer >= getLayerCount())
 	{
 		return Result::InvalidLayerIndex;
 	}
