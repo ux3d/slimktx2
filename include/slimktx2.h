@@ -87,7 +87,8 @@ namespace ux3d
 			InvalidImageSize, // setImage _byteSize does not match information of specifyFormat
 			InvalidLevelIndex,
 			InvalidFaceIndex,
-			InvalidLayerIndex
+			InvalidLayerIndex,
+			ContainerNotAllocated
 		};
 
 		// Serialization API:
@@ -95,7 +96,8 @@ namespace ux3d
 		// SlimKTX2 ktx(callbacks);
 		// ktx.specifyFormat(Format::R16G16B16A16_SFLOAT, 1024, 1024);
 		// ktx.allocateContainer();
-		// ktx.setImage()
+		// ktx.setImage();
+		// ktx.serialize(_file);
 
 		// ktx internally stores mip levels in order from small to total (pixelWidth * pixelHeight) size
 		// SlimKTX2 hides this and exposes mip levels like in most GPU APIs where level 0 contains the full image of pixelWidth * pixelHeight, and level 1 half-size image and so on
@@ -121,12 +123,12 @@ namespace ux3d
 			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 1u, uint32_t _layerCount = 1u);
 
 			// allocates all image memory required for setImage
-			Result allocateLevelContainer();
+			Result allocateContainer();
 
-			uint64_t getLevelContainerSize() const;
+			uint64_t getContainerSize() const;
 
 			//returns pointer to container
-			uint8_t* getLevelContainerPointer();
+			uint8_t* getContainerPointer();
 
 			// copy image data to container (that was allocated by allocateContainer)
 			Result setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer);
@@ -143,12 +145,15 @@ namespace ux3d
 			// as defined by vulkan (pixel size)
 			static uint32_t getPixelSize(Format _vkFormat);
 
-			static uint64_t getImageSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u, uint32_t _faceCount = 1u, uint32_t _layerCount = 1u);
+			static uint64_t getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _levelCount, uint32_t _width, uint32_t _height, uint32_t _depth = 0u);
 
-			static uint64_t getLevelContainerImageOffset(uint32_t _pixelByteSize, uint32_t _levelCount, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth, uint32_t _faceCount, uint32_t _layerCount);
+			// compute byte offset withing m_pContainer for the specified level, face and layer indices, requres m_pLevels to be initialized
+			uint64_t getContainerImageOffset(uint32_t _level, uint32_t _face, uint32_t _layer) const;
 
 			// computes the pixel count (resolution) of an image of the given level
-			static uint32_t getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth);
+			static uint32_t getPixelCount(uint32_t _level, uint32_t _levelCount, uint32_t _width, uint32_t _height, uint32_t _depth);
+
+			static uint64_t padding(uint64_t _value, uint32_t _alginment);
 
 		private:
 
@@ -161,9 +166,6 @@ namespace ux3d
 			bool seek(IOHandle _file, size_t _offset);
 
 			void log(const char* _pFormat, ...);
-
-			// revese _level
-			uint32_t getKTXLevel(uint32_t _level) const;
 
 		private:
 			Callbacks m_callbacks{};
