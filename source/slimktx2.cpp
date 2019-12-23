@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2019 UX3D GmbH. All rights reserved.
 
 #include "slimktx2.h"
-#include <stdarg.h>
 #include <string.h>
 
 using namespace ux3d::slimktx2;
@@ -184,6 +183,8 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
+	// TODO: copy from _file to m_pContainer using m_pLevel offsets instead of copying the whole container to memory
+
 	return Result::Success;
 }
 
@@ -287,6 +288,8 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 		m_pLevels[level].byteLength = levelSize;
 		m_pLevels[level].uncompressedByteLength = levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
 
+		log("level %u offset %llu length %llu\n", level, offset, levelSize);
+
 		offset += levelSize + padding(levelSize, 8u);
 	}
 
@@ -303,6 +306,7 @@ Result SlimKTX2::allocateContainer()
 	const uint64_t size = getContainerSize();
 
 	m_pContainer = static_cast<uint8_t*>(allocate(size));
+	memset(m_pContainer, 0, size); //set memory to 0 incase of level padding
 	
 	return Result::Success;
 }

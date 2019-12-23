@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 namespace ux3d
 {
@@ -20,7 +21,7 @@ namespace ux3d
 		using TellFunc = size_t(*)(void* _pUserData, const IOHandle _file);
 		using SeekFunc = bool(*)(void* _pUserData, IOHandle _file, size_t _offset);
 
-		using LogFunc = void(*)(void* _pUserData, const char* _pFormat, ...);
+		using LogFunc = void(*)(void* _pUserData, const char* _pFormat, va_list args);
 
 		struct Callbacks
 		{
