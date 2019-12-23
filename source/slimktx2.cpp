@@ -71,9 +71,9 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	}
 }
 
-uint64_t SlimKTX2::getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _levelCount, uint32_t _width, uint32_t _height, uint32_t _depth)
+uint64_t SlimKTX2::getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
 {
-	const uint32_t resolution = getPixelCount(_level, _levelCount, _width, _height, _depth);
+	const uint64_t resolution = getPixelCount(_level, _width, _height, _depth);
 	return resolution * _pixelByteSize;
 }
 
@@ -86,14 +86,19 @@ uint64_t SlimKTX2::getContainerImageOffset(uint32_t _level, uint32_t _face, uint
 		return 0u;
 	}
 
-	for (uint32_t l = 0; l < _level; ++l)
+	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+
+	// small to large levels
+	for (uint32_t l = getLevelCount() - 1u; l > _level; --l)
 	{
-		const uint64_t levelSize = m_pLevels[l].byteLength;
+		//const uint64_t levelSize = m_pLevels[l].byteLength;
+		const uint64_t levelSize = getFaceSize(pixelSize, l, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth) * getFaceCount() * getLayerCount();
 		offset += levelSize;
 		offset += padding(levelSize, 8u);
 	}
 
-	const uint64_t faceSize = getFaceSize(getPixelSize(m_header.vkFormat), _level, m_header.levelCount, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+	// add largest level
+	const uint64_t faceSize = getFaceSize(getPixelSize(m_header.vkFormat), _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 
 	// number of previous layers with either 1 or 6 faces
 	uint64_t prevFaces = faceSize * _layer * m_header.faceCount;
@@ -107,19 +112,17 @@ uint64_t SlimKTX2::getContainerImageOffset(uint32_t _level, uint32_t _face, uint
 	return offset;
 }
 
-uint32_t SlimKTX2::getPixelCount(uint32_t _level, uint32_t _levelCount, uint32_t _width, uint32_t _height, uint32_t _depth)
+uint32_t SlimKTX2::getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
 {
-	const uint32_t shift = _levelCount - _level - 1u;
-
-	uint32_t result = _width >> shift;
+	uint32_t result = _width >> _level;
 
 	if (_height != 0u)
 	{
-		result *= _height >> shift;
+		result *= _height >> _level;
 	}
 	if (_depth != 0u)
 	{
-		result *= _depth >> shift;
+		result *= _depth >> _level;
 	}
 
 	return result;
@@ -219,6 +222,11 @@ uint32_t SlimKTX2::getLayerCount() const
 	return m_header.layerCount != 0u ? m_header.layerCount : 1u;
 }
 
+uint32_t SlimKTX2::getFaceCount() const
+{
+	return m_header.faceCount != 0u ? m_header.faceCount : 1u;
+}
+
 const Header& SlimKTX2::getHeader() const
 {
 	return m_header;
@@ -267,9 +275,10 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 		m_sections.kvdByteLength + // what about align(8) ?
 		m_sections.sgdByteLength;
 
-	for (uint32_t level = 0; level < levelCount; ++level)
+	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 	{
-		uint64_t levelSize = getFaceSize(pixelSize, level, levelCount, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		// start with the small level, fill them in reverse
+		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= m_header.faceCount;
 		levelSize *= getLayerCount();
 
@@ -333,7 +342,7 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 	const uint64_t imageSize = m_pLevels[_level].byteLength / m_header.faceCount / getLayerCount();
 
 	// for debugging: size of one mip level image
-	const uint64_t dbgSize = getFaceSize(pixelSize, _level, getLevelCount(),  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+	const uint64_t dbgSize = getFaceSize(pixelSize, _level,  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 
 	if (_byteSize != imageSize || _byteSize != dbgSize)
 	{
@@ -429,4 +438,9 @@ void SlimKTX2::log(const char* _pFormat, ...)
 		m_callbacks.log(m_callbacks.userData, _pFormat, args);
 		va_end(args);
 	}
+}
+
+uint32_t SlimKTX2::getKtxLevel(uint32_t _level) const
+{
+	return getLevelCount() - _level - 1u;
 }

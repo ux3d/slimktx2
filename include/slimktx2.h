@@ -118,6 +118,8 @@ namespace ux3d
 
 			uint32_t getLevelCount() const;
 			uint32_t getLayerCount() const;
+			uint32_t getFaceCount() const;
+
 			const Header& getHeader() const;
 
 			// fills header and locks format/data-layout for addImage
@@ -146,13 +148,13 @@ namespace ux3d
 			// as defined by vulkan (pixel size)
 			static uint32_t getPixelSize(Format _vkFormat);
 
-			static uint64_t getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _levelCount, uint32_t _width, uint32_t _height, uint32_t _depth = 0u);
+			static uint64_t getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u);
 
 			// compute byte offset withing m_pContainer for the specified level, face and layer indices, requres m_pLevels to be initialized
 			uint64_t getContainerImageOffset(uint32_t _level, uint32_t _face, uint32_t _layer) const;
 
 			// computes the pixel count (resolution) of an image of the given level
-			static uint32_t getPixelCount(uint32_t _level, uint32_t _levelCount, uint32_t _width, uint32_t _height, uint32_t _depth);
+			static uint32_t getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth);
 
 			static uint64_t padding(uint64_t _value, uint32_t _alginment);
 
@@ -167,6 +169,8 @@ namespace ux3d
 			bool seek(IOHandle _file, size_t _offset);
 
 			void log(const char* _pFormat, ...);
+
+			uint32_t getKtxLevel(uint32_t _level) const;
 
 		private:
 			Callbacks m_callbacks{};
