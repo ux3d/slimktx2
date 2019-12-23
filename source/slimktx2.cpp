@@ -159,6 +159,28 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
+	const uint64_t offset = sizeof(Header) +
+		sizeof(SectionIndex) + levelIndexSize +
+		m_sections.dfdByteLength +
+		m_sections.kvdByteLength +
+		m_sections.sgdByteLength;
+
+	const size_t pos = tell(_file);
+
+	if (pos != offset)
+	{
+		return Result::IOReadFail;
+	}
+
+	const uint64_t containerSize = getContainerSize();
+
+	m_pContainer = static_cast<uint8_t*>(allocate(containerSize));
+
+	if (containerSize != read(_file, m_pContainer, containerSize))
+	{
+		return Result::IOReadFail;
+	}
+
 	return Result::Success;
 }
 
@@ -180,7 +202,9 @@ Result SlimKTX2::serialize(IOHandle _file)
 
 	// TODO: write dfd, kvd and sgd
 
-	write(_file, m_pContainer, getContainerSize());
+	const uint64_t containerSize = getContainerSize();
+
+	write(_file, m_pContainer, containerSize);
 
 	return Result::Success;
 }
