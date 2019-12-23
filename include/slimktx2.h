@@ -47,9 +47,9 @@ namespace ux3d
 
 		struct Header
 		{
-			static constexpr char* Magic = "«KTX 20»\r\n\x1A\n";
+			static constexpr uint8_t Magic[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
 
-			char identifier[12];
+			uint8_t identifier[12];
 			Format vkFormat;
 			uint32_t typeSize;
 			uint32_t pixelWidth;
@@ -88,6 +88,7 @@ namespace ux3d
 			InvalidLevelIndex,
 			InvalidFaceIndex,
 			InvalidLayerIndex,
+			LevelIndexNotAllocated,
 			ContainerNotAllocated
 		};
 

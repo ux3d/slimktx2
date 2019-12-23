@@ -164,6 +164,16 @@ Result SlimKTX2::parse(IOHandle _file)
 
 Result SlimKTX2::serialize(IOHandle _file)
 {
+	if (m_pLevels == nullptr)
+	{
+		return Result::LevelIndexNotAllocated;
+	}
+
+	if (m_pContainer == nullptr)
+	{
+		return Result::ContainerNotAllocated;
+	}
+
 	write(_file, &m_header, sizeof(Header));
 	write(_file, &m_sections, sizeof(SectionIndex));
 	write(_file, m_pLevels, sizeof(LevelIndex) * m_header.levelCount);
