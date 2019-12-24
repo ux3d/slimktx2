@@ -147,6 +147,24 @@ namespace ux3d
 			R32G32B32A32_SFLOAT = 109,
 		};
 
+		// dont use enum class to allow converssion to uint32_t
+		enum CubeMapFace : uint32_t
+		{
+			Right = 0,
+			Left,
+			Top,
+			Bottom,
+			Front,
+			Back,
+
+			Xpos = Right,
+			Xneg = Left,
+			Ypos = Top,
+			Yneg = Bottom,
+			Zpos = Front,
+			Zneg = Back
+		};
+
 		struct Header
 		{
 			static const uint8_t Magic[12];
