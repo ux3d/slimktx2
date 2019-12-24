@@ -48,7 +48,7 @@ namespace ux3d
 
 		struct Header
 		{
-			static constexpr uint8_t Magic[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
+			static const uint8_t Magic[12];
 
 			uint8_t identifier[12];
 			Format vkFormat;
@@ -132,13 +132,16 @@ namespace ux3d
 			uint64_t getContainerSize() const;
 
 			//returns pointer to container
-			uint8_t* getContainerPointer();
+			uint8_t* getContainerPointer() const;
+
+			// compute byte offset withing m_pContainer for the specified level, face and layer indices, requres m_pLevels to be initialized
+			uint64_t getContainerImageOffset(uint32_t _level, uint32_t _face, uint32_t _layer) const;
 
 			// copy image data to container (that was allocated by allocateContainer)
 			Result setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer);
 
-			// _imageSize is used for validation if _imageSize != 0u
-			Result getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _face, uint32_t _layer, uint64_t _imageSize = 0u);
+			// returns pointer to face at _level, _layer, _face index, _imageSize is used for validation if _imageSize != 0u
+			Result getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _face, uint32_t _layer, uint64_t _imageSize = 0u) const;
 
 			// free allocated memory, clear members
 			void clear();
@@ -150,9 +153,6 @@ namespace ux3d
 			static uint32_t getPixelSize(Format _vkFormat);
 
 			static uint64_t getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u);
-
-			// compute byte offset withing m_pContainer for the specified level, face and layer indices, requres m_pLevels to be initialized
-			uint64_t getContainerImageOffset(uint32_t _level, uint32_t _face, uint32_t _layer) const;
 
 			// computes the pixel count (resolution) of an image of the given level
 			static uint32_t getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth);

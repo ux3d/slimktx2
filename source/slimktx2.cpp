@@ -5,6 +5,9 @@
 
 using namespace ux3d::slimktx2;
 
+const uint8_t Header::Magic[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
+
+
 template <class T>
 T max(T x, T y) { return x > y ? x : y; }
 
@@ -328,7 +331,7 @@ uint64_t SlimKTX2::getContainerSize() const
 	return size;
 }
 
-uint8_t* SlimKTX2::getContainerPointer()
+uint8_t* SlimKTX2::getContainerPointer() const
 {
 	return m_pContainer;
 }
@@ -364,7 +367,7 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 	return res;
 }
 
-Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _face, uint32_t _layer, uint64_t _imageSize)
+Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _face, uint32_t _layer, uint64_t _imageSize) const
 {
 	if (m_pContainer == nullptr)
 	{
