@@ -410,16 +410,16 @@ Result SlimKTX2::allocateContainer()
 
 uint64_t SlimKTX2::getContainerSize() const
 {
-	if (m_pLevels == nullptr)
-	{
-		return 0u;
-	}
+	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 
 	uint64_t size = 0u;
-	for (uint32_t level = 0u; level < getLevelCount(); ++level)
+	for (uint32_t l = 0u; l < getLevelCount(); ++l)
 	{
-		size += m_pLevels[level].byteLength;
-		size += padding(m_pLevels[level].byteLength, 8u);
+		uint64_t levelSize = getFaceSize(pixelSize, l, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		levelSize *= getFaceCount();
+		levelSize *= getLayerCount();
+
+		size += levelSize + padding(levelSize, 8u);
 	}
 
 	return size;
