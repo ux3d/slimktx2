@@ -64,11 +64,11 @@ if (slimKTX2.parse(pFile) != Result::Success)
 	return;
 }
 
-for(uint32_t level = 0; level < m_slimKTX2.getLevelCount(); ++level)
+for(uint32_t level = 0; level < slimKTX2.getLevelCount(); ++level)
 {
-    for(uint32_t layer = 0; layer < m_slimKTX2.getLayerCount(); ++layer)
+    for(uint32_t layer = 0; layer < slimKTX2.getLayerCount(); ++layer)
     {
-        for(uint32_t face = 0; face < m_slimKTX2.getFaceCount(); ++face)
+        for(uint32_t face = 0; face < slimKTX2.getFaceCount(); ++face)
         {
             uint8_t* pDst = nullptr;
             if (slimKTX2.getImage(pDst, level, face, layer)) == Result::Success)
