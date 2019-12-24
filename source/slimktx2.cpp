@@ -7,7 +7,6 @@ using namespace ux3d::slimktx2;
 
 const uint8_t Header::Magic[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
 
-
 template <class T>
 T max(T x, T y) { return x > y ? x : y; }
 
@@ -51,23 +50,118 @@ void SlimKTX2::clear()
 
 uint32_t SlimKTX2::getTypeSize(Format _vkFormat)
 {
-	switch (_vkFormat)
+	if (_vkFormat == Format::UNDEFINED || 
+		(_vkFormat >= Format::R8_UNORM && _vkFormat <= Format::B8G8R8A8_SRGB))
 	{
-	case Format::UNDEFINED:
 		return 1u;
-	case Format::R16G16B16A16_SFLOAT:
-		return 2u;
-	default:
-		return 0u; // invalid
 	}
+	else if (_vkFormat >= Format::R16_UNORM && _vkFormat <= Format::R16G16B16A16_SFLOAT)
+	{
+		return 2u;
+	}
+	else if (_vkFormat >= Format::R32_UINT && _vkFormat <= Format::R32G32B32A32_SFLOAT)
+	{
+		return 4u;
+	}
+
+	return 0u; // invalid
 }
 
 uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 {
 	switch (_vkFormat)
 	{
+		// 1 BYTE
+	case Format::R8_UNORM:
+	case Format::R8_SNORM:
+	case Format::R8_UINT:
+	case Format::R8_SINT:
+	case Format::R8_SRGB:
+		return 1u;
+
+		// 2 BYTE
+	case Format::R8G8_UNORM:
+	case Format::R8G8_SNORM:
+	case Format::R8G8_UINT:
+	case Format::R8G8_SINT:
+	case Format::R8G8_SRGB:
+
+	case Format::R16_UNORM:
+	case Format::R16_SNORM:
+	case Format::R16_UINT:
+	case Format::R16_SINT:
+	case Format::R16_SFLOAT:
+		return 2u;
+
+		// 3 BYTE
+	case Format::R8G8B8_UNORM:
+	case Format::R8G8B8_SNORM:
+	case Format::R8G8B8_UINT:
+	case Format::R8G8B8_SINT:
+	case Format::R8G8B8_SRGB:
+
+	case Format::B8G8R8_UNORM:
+	case Format::B8G8R8_SNORM:
+	case Format::B8G8R8_UINT:
+	case Format::B8G8R8_SINT:
+	case Format::B8G8R8_SRGB:
+		return 3u;
+
+		// 4 BYTE
+	case Format::R8G8B8A8_UNORM:
+	case Format::R8G8B8A8_SNORM:
+	case Format::R8G8B8A8_UINT:
+	case Format::R8G8B8A8_SINT:
+	case Format::R8G8B8A8_SRGB:
+
+	case Format::B8G8R8A8_UNORM:
+	case Format::B8G8R8A8_SNORM:
+	case Format::B8G8R8A8_UINT:
+	case Format::B8G8R8A8_SINT:
+	case Format::B8G8R8A8_SRGB:
+
+	case Format::R16G16_UNORM:
+	case Format::R16G16_SNORM:
+	case Format::R16G16_UINT:
+	case Format::R16G16_SINT:
+	case Format::R16G16_SFLOAT:
+
+	case Format::R32_UINT:
+	case Format::R32_SINT:
+	case Format::R32_SFLOAT:
+		return 4u;
+
+		// 6 BYTE
+	case Format::R16G16B16_UNORM:
+	case Format::R16G16B16_SNORM:
+	case Format::R16G16B16_UINT:
+	case Format::R16G16B16_SINT:
+	case Format::R16G16B16_SFLOAT:
+		return 6u;
+
+		// 8 BYTE
+	case Format::R16G16B16A16_UNORM:
+	case Format::R16G16B16A16_SNORM:
+	case Format::R16G16B16A16_UINT:
+	case Format::R16G16B16A16_SINT:
 	case Format::R16G16B16A16_SFLOAT:
+
+	case Format::R32G32_UINT:
+	case Format::R32G32_SINT:
+	case Format::R32G32_SFLOAT:
 		return 8u;
+
+		// 12 BYTE
+	case Format::R32G32B32_UINT:
+	case Format::R32G32B32_SINT:
+	case Format::R32G32B32_SFLOAT:
+		return 12u;
+
+		// 16 BYTE
+	case Format::R32G32B32A32_UINT:
+	case Format::R32G32B32A32_SINT:
+	case Format::R32G32B32A32_SFLOAT:
+		return 6u;
 	default:
 		return 0u; // invalid
 	}
