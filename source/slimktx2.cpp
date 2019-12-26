@@ -161,7 +161,7 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	case Format::R32G32B32A32_UINT:
 	case Format::R32G32B32A32_SINT:
 	case Format::R32G32B32A32_SFLOAT:
-		return 6u;
+		return 16u;
 	default:
 		return 0u; // invalid
 	}
