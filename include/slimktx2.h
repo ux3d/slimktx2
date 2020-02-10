@@ -276,7 +276,12 @@ namespace ux3d
 			// computes the pixel count (resolution) of an image of the given level
 			static uint32_t getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth);
 
-			static uint64_t padding(uint64_t _value, uint32_t _alginment);
+			static uint32_t padding(uint64_t _value, uint32_t _alginment);
+
+			// greedy least common multiple
+			static uint32_t lcm(uint32_t _x, uint32_t _y);
+
+			static uint32_t mipPadding(uint64_t _value, uint32_t _pixelByteSize);
 
 		private:
 

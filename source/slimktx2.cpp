@@ -190,7 +190,7 @@ uint64_t SlimKTX2::getContainerImageOffset(uint32_t _level, uint32_t _face, uint
 		//const uint64_t levelSize = m_pLevels[l].byteLength;
 		const uint64_t levelSize = getFaceSize(pixelSize, l, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth) * getFaceCount() * getLayerCount();
 		offset += levelSize;
-		offset += padding(levelSize, 8u);
+		offset += mipPadding(levelSize, pixelSize);
 	}
 
 	// add largest level
@@ -224,9 +224,29 @@ uint32_t SlimKTX2::getPixelCount(uint32_t _level, uint32_t _width, uint32_t _hei
 	return result;
 }
 
-uint64_t SlimKTX2::padding(uint64_t _value, uint32_t _alginment)
+uint32_t SlimKTX2::padding(uint64_t _value, uint32_t _alginment)
 {
 	return (_alginment - (_value % _alginment)) % _alginment;
+}
+
+uint32_t SlimKTX2::lcm(uint32_t _x, uint32_t _y)
+{
+	uint32_t max = _x > _y ? _x : _y;
+
+	while (!((max % _x == 0u) && (max % _y == 0u)))
+	{
+		++max;
+	}
+
+	return max;
+}
+
+uint32_t SlimKTX2::mipPadding(uint64_t _value, uint32_t _pixelByteSize)
+{
+	const uint32_t texelBlockSize = _pixelByteSize != 0u ? _pixelByteSize : 16u;
+	const uint32_t lcm = SlimKTX2::lcm(texelBlockSize, 4u);
+	const uint32_t padding = SlimKTX2::padding(_value, lcm);
+	return padding;
 }
 
 Result SlimKTX2::parse(IOHandle _file)
@@ -375,6 +395,8 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 
 	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 	{
+		offset += mipPadding(offset, pixelSize);
+
 		// start with the small level, fill them in reverse
 		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= m_header.faceCount;
@@ -387,7 +409,7 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 
 		log("level %u offset %llu length %llu\n", level, offset, levelSize);
 
-		offset += levelSize + padding(levelSize, 8u);
+		offset += levelSize;
 	}
 
 	return Result::Success;
@@ -419,7 +441,7 @@ uint64_t SlimKTX2::getContainerSize() const
 		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
 
-		size += levelSize + padding(levelSize, 8u);
+		size += levelSize + mipPadding(levelSize, pixelSize);
 	}
 
 	return size;
