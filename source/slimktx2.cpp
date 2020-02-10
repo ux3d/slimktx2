@@ -278,15 +278,12 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	const uint64_t offset = sizeof(Header) +
-		sizeof(SectionIndex) + levelIndexSize +
-		m_sections.dfdByteLength +
-		m_sections.kvdByteLength +
-		m_sections.sgdByteLength;
+	// TODO: read dfd, kvd and sgd
 
-	const size_t pos = tell(_file);
+	const uint64_t mipArrayOffset = m_pLevels[levelCount - 1].byteOffset;
 
-	if (pos != offset)
+	// skip to first level
+	if (seek(_file, mipArrayOffset) == false)
 	{
 		return Result::IOReadFail;
 	}
@@ -322,6 +319,8 @@ Result SlimKTX2::serialize(IOHandle _file)
 	write(_file, m_pLevels, sizeof(LevelIndex) * m_header.levelCount);
 
 	// TODO: write dfd, kvd and sgd
+	// dfd and kvd are required fields and the validator will emit warnings
+	// some parser implementation still work as they also ignore those fields.
 
 	const uint64_t containerSize = getContainerSize();
 
@@ -382,16 +381,21 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	// compression and sections index are not used
 
 	const uint32_t levelCount = getLevelCount();
-	const size_t levelIndexSize = sizeof(LevelIndex) * levelCount;
+	const uint32_t levelIndexSize = static_cast<uint32_t>(sizeof(LevelIndex)) * levelCount;
 
 	m_pLevels = static_cast<LevelIndex*>(allocate(levelIndexSize));
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 
-	uint64_t offset = sizeof(Header) +
-		sizeof(SectionIndex) + levelIndexSize +
-		m_sections.dfdByteLength +
-		m_sections.kvdByteLength + // what about align(8) ?
-		m_sections.sgdByteLength;
+	m_sections.dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + levelIndexSize;
+	m_sections.kvdByteOffset = m_sections.dfdByteOffset + m_sections.dfdByteLength;
+	m_sections.sgdByteOffset = m_sections.kvdByteOffset + m_sections.kvdByteLength;
+
+	if (m_sections.sgdByteLength > 0u)
+	{
+		m_sections.sgdByteOffset += padding(m_sections.sgdByteOffset, 8u);
+	}
+
+	uint64_t offset = m_sections.sgdByteOffset + m_sections.sgdByteLength;
 
 	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 	{
