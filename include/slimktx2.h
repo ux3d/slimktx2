@@ -198,6 +198,67 @@ namespace ux3d
 			uint64_t uncompressedByteLength;
 		};
 
+		struct DataFormatDesc
+		{
+			uint32_t dfdTotalSize;
+
+			//https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#DescriptorPrefix
+			struct Block 
+			{
+				uint32_t vendorId : 17;
+				uint32_t type : 15;
+				uint32_t : 0; // start new word
+
+				uint32_t versionNumber : 16;
+				uint32_t blockSize : 16; // = 24 + 16 × #samples
+				uint32_t : 0; // start new word
+
+				uint32_t colorModel : 4;
+				uint32_t colorPrimaries : 4;
+				uint32_t transferFunction : 4;
+				uint32_t flags : 4;
+
+				uint32_t : 0; // start new word
+				uint32_t texelBlockDimension0 : 4;
+				uint32_t texelBlockDimension1 : 4;
+				uint32_t texelBlockDimension2 : 4;
+				uint32_t texelBlockDimension3 : 4;
+
+				uint64_t : 0; // start new word
+				uint64_t bytesPlane0 : 4;
+				uint64_t bytesPlane1 : 4;
+				uint64_t bytesPlane2 : 4;
+				uint64_t bytesPlane3 : 4;
+				uint64_t bytesPlane4 : 4;
+				uint64_t bytesPlane5 : 4;
+				uint64_t bytesPlane6 : 4;
+				uint64_t bytesPlane7 : 4;
+
+				static constexpr uint32_t blockHeaderSize = 24u; //
+				// ...
+				// Sample information for the first sample
+				// Sample information for the second sample (optional), etc.
+				uint32_t* pSamples = nullptr; // uint32_t[sampleCount]
+
+				uint32_t getSampleCount() const { return (blockSize - blockHeaderSize) / 4u; }
+				void setSampleCount(uint32_t _sampleCount) { blockSize = blockHeaderSize + _sampleCount * 4u; }
+			};
+
+			Block* pBlocks = nullptr;
+		};
+
+		struct KeyValueData
+		{
+			uint32_t keyAndValueByteLength = 0u;
+			uint8_t* pKeyAndValue = nullptr; // uint8_t [keyAndValueByteLength]
+			// align(4)
+		};
+
+		struct SuperCompressionGlobalData
+		{
+			//uint8_t[sgdByteLength];
+		};
+
 		enum class Result : uint32_t
 		{
 			Success = 0u,
