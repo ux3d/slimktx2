@@ -329,16 +329,27 @@ Result SlimKTX2::serialize(IOHandle _file)
 		return Result::ContainerNotAllocated;
 	}
 
-	//if (m_dfd.pBlocks == nullptr)
-	//{
-	//	return Result::DataFormatDescNotAllocated;
-	//}
+	if (m_dfd.pBlocks == nullptr)
+	{
+		return Result::DataFormatDescNotAllocated;
+	}
+
+	m_sections.dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
+	m_sections.dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
+	m_sections.kvdByteLength = 0u; // TODO compute
+	m_sections.kvdByteOffset = m_sections.dfdByteOffset + m_sections.dfdByteLength;
+	m_sections.sgdByteLength = 0u; // TODO compute
+	m_sections.sgdByteOffset = m_sections.kvdByteOffset + m_sections.kvdByteLength;
 
 	write(_file, &m_header);
+
 	write(_file, &m_sections);
+
 	write(_file, m_pLevels, m_header.levelCount);
 
-	// TODO: write dfd, kvd and sgd
+	writeDFD(_file);
+
+	// TODO: write kvd and sgd
 	// dfd and kvd are required fields and the validator will emit warnings
 	// some parser implementation still work as they also ignore those fields.
 
@@ -376,6 +387,8 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 		free(m_pLevels);
 	}
 
+	destroyDFD();
+
 	memcpy(m_header.identifier, Header::Magic, sizeof(m_header.identifier));
 	m_header.vkFormat = _vkFormat;
 	m_header.typeSize = getTypeSize(_vkFormat);
@@ -398,13 +411,16 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	m_header.levelCount = min(maxLevel, _levelCount);
 	m_header.supercompressionScheme = 0u;
 
-	// compression and sections index are not used
-
 	const uint32_t levelCount = getLevelCount();
 	const uint32_t levelIndexSize = static_cast<uint32_t>(sizeof(LevelIndex)) * levelCount;
 
-	m_pLevels = static_cast<LevelIndex*>(allocate(levelIndexSize));
+	m_pLevels = allocateArray<LevelIndex>(levelCount);
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+
+	// TODO: fill with meaningful data
+	m_dfd.pBlocks = allocateArray<DataFormatDesc::Block>();
+	m_dfd.totalSize = m_dfd.computeSize();
+	m_sections.dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // totalSize member
 
 	m_sections.dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + levelIndexSize;
 	m_sections.kvdByteOffset = m_sections.dfdByteOffset + m_sections.dfdByteLength;
@@ -656,7 +672,7 @@ bool SlimKTX2::readDFD(IOHandle _file)
 	return true;
 }
 
-bool SlimKTX2::writeDFD(IOHandle _file)
+void SlimKTX2::writeDFD(IOHandle _file) const
 {
 	// TODO: validate total size
 	write(_file, &m_dfd.totalSize);
@@ -674,8 +690,6 @@ bool SlimKTX2::writeDFD(IOHandle _file)
 
 		pBlock = pBlock->pNext;
 	};
-
-	return false;
 }
 
 DataFormatDesc::BlockHeader::BlockHeader() :
@@ -685,7 +699,39 @@ DataFormatDesc::BlockHeader::BlockHeader() :
 	blockSize(blockHeaderSize),
 	colorModel(0u), // unspecified
 	colorPrimaries(0u), // unspecified
-	transferFunction(0u), // linear
-	flags(0u) // alpha straight
+	transferFunction(1u), // linear
+	flags(0u), // alpha straight
+	texelBlockDimension0(0u),
+	texelBlockDimension1(0u),
+	texelBlockDimension2(0u),
+	texelBlockDimension3(0u),
+	bytesPlane0(0u),
+	bytesPlane1(0u),
+	bytesPlane2(0u),
+	bytesPlane3(0u),
+	bytesPlane4(0u),
+	bytesPlane5(0u),
+	bytesPlane6(0u),
+	bytesPlane7(0u)
 {
+}
+
+uint32_t DataFormatDesc::computeSize() const
+{
+	size_t size = 0u; // totalSize member ignored
+
+	const Block* pBlock = pBlocks;
+	while (pBlock != nullptr)
+	{
+		size += blockHeaderSize;
+
+		if (pBlock->pSamples != nullptr)
+		{
+			size += pBlock->getSampleCount() * sampleSize;			
+		}
+
+		pBlock = pBlock->pNext;
+	};
+
+	return static_cast<uint32_t>(size);
 }

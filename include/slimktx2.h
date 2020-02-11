@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <new.h>
 
 namespace ux3d
 {
@@ -256,6 +257,8 @@ namespace ux3d
 			};
 
 			Block* pBlocks = nullptr; // Linked list
+
+			uint32_t computeSize() const;
 		};
 
 		struct KeyValueData
@@ -362,13 +365,13 @@ namespace ux3d
 			void free(void* _pData);
 
 			template<class T>
-			T* allocateArray(size_t _count = 1u) { return reinterpret_cast<T*>(sizeof(T) * _count); }
+			T* allocateArray(size_t _count = 1u) { return new(reinterpret_cast<T*>(allocate(sizeof(T) * _count))) T{}; }
 
 			template<class T>
 			bool read(IOHandle _file, T* _pData, size_t _count = 1u) { return sizeof(T) * _count == m_callbacks.read(m_callbacks.userData, _file, _pData, sizeof(T) * _count); }
 
 			template<class T>
-			void write(IOHandle _file, const T* _pData, size_t _count = 1u) { m_callbacks.write(m_callbacks.userData, _file, _pData, sizeof(T)* _count); }
+			void write(IOHandle _file, const T* _pData, size_t _count = 1u) const { m_callbacks.write(m_callbacks.userData, _file, _pData, sizeof(T)* _count); }
 
 			size_t tell(const IOHandle _file);
 			bool seek(IOHandle _file, size_t _offset);
@@ -379,7 +382,7 @@ namespace ux3d
 
 			void destroyDFD();
 			bool readDFD(IOHandle _file);
-			bool writeDFD(IOHandle _file);
+			void writeDFD(IOHandle _file) const;
 
 		private:
 			Callbacks m_callbacks{};
