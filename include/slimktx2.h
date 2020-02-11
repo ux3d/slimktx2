@@ -200,10 +200,10 @@ namespace ux3d
 
 		struct DataFormatDesc
 		{
-			uint32_t dfdTotalSize;
+			uint32_t totalSize{};
 
 			//https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#DescriptorPrefix
-			struct Block 
+			struct BlockHeader 
 			{
 				uint32_t vendorId : 17;
 				uint32_t type : 15;
@@ -233,18 +233,24 @@ namespace ux3d
 				uint64_t bytesPlane5 : 4;
 				uint64_t bytesPlane6 : 4;
 				uint64_t bytesPlane7 : 4;
+			};
 
-				static constexpr uint32_t blockHeaderSize = 24u; //
+			static constexpr uint32_t blockHeaderSize = sizeof(BlockHeader); // 24u
+
+			struct Block
+			{
+				uint32_t getSampleCount(const BlockHeader& _header) const { return (_header.blockSize - blockHeaderSize) / 4u; }
+				void setSampleCount(BlockHeader& _header, uint32_t _sampleCount) { _header.blockSize = blockHeaderSize + _sampleCount * 4u; }
+
+				BlockHeader header{};
 				// ...
 				// Sample information for the first sample
 				// Sample information for the second sample (optional), etc.
 				uint32_t* pSamples = nullptr; // uint32_t[sampleCount]
-
-				uint32_t getSampleCount() const { return (blockSize - blockHeaderSize) / 4u; }
-				void setSampleCount(uint32_t _sampleCount) { blockSize = blockHeaderSize + _sampleCount * 4u; }
+				Block* pNext = nullptr;
 			};
 
-			Block* pBlocks = nullptr;
+			Block* pBlocks = nullptr; // Linked list
 		};
 
 		struct KeyValueData
@@ -270,7 +276,8 @@ namespace ux3d
 			InvalidFaceIndex,
 			InvalidLayerIndex,
 			LevelIndexNotAllocated,
-			ContainerNotAllocated
+			ContainerNotAllocated,
+			DataFormatDescNotAllocated,
 		};
 
 		// Serialization API:
@@ -349,6 +356,9 @@ namespace ux3d
 			void* allocate(size_t _size);
 			void free(void* _pData);
 
+			template<class T>
+			T* allocate() { return reinterpret_cast<T*>(sizeof(T)); }
+
 			size_t read(IOHandle _file, void* _pData, size_t _size);
 			void write(IOHandle _file, const void* _pData, size_t _size);
 			size_t tell(const IOHandle _file);
@@ -357,6 +367,9 @@ namespace ux3d
 			void log(const char* _pFormat, ...);
 
 			uint32_t getKtxLevel(uint32_t _level) const;
+
+			void destroyDFD(DataFormatDesc& _dfd);
+			bool readDFD(IOHandle _file, DataFormatDesc& _dfd);
 
 		private:
 			Callbacks m_callbacks{};
@@ -367,6 +380,9 @@ namespace ux3d
 			// in KTX mip level 0 is the smallest, so m_pLevels[0] contains the image with (resolution >> levelCount) pixels
 			LevelIndex* m_pLevels = nullptr;
 
+			DataFormatDesc m_dfd{};
+
+			// mipLevel array
 			uint8_t* m_pContainer = nullptr;
 		};
 	}// !slimktx2

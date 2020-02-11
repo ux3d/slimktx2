@@ -35,17 +35,22 @@ void ux3d::slimktx2::SlimKTX2::setCallbacks(const Callbacks& _callbacks)
 
 void SlimKTX2::clear()
 {
+	// level index
 	if (m_pLevels != nullptr)
 	{
 		free(m_pLevels);
-		m_pLevels = nullptr;
 	}
+	m_pLevels = nullptr;
 
+	// DFD
+	destroyDFD(m_dfd);
+
+	// mip map array
 	if (m_pContainer != nullptr)
 	{
 		free(m_pContainer);
-		m_pContainer = nullptr;
 	}
+	m_pContainer = nullptr;
 }
 
 uint32_t SlimKTX2::getTypeSize(Format _vkFormat)
@@ -278,7 +283,18 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	// TODO: read dfd, kvd and sgd
+	// dfd is mandatory
+	if (m_sections.dfdByteLength < sizeof(uint32_t) || seek(_file, m_sections.dfdByteOffset) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	if (readDFD(_file, m_dfd) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	// TODO: kvd and sgd	
 
 	const uint64_t mipArrayOffset = m_pLevels[levelCount - 1].byteOffset;
 
@@ -313,6 +329,11 @@ Result SlimKTX2::serialize(IOHandle _file)
 	{
 		return Result::ContainerNotAllocated;
 	}
+
+	//if (m_dfd.pBlocks == nullptr)
+	//{
+	//	return Result::DataFormatDescNotAllocated;
+	//}
 
 	write(_file, &m_header, sizeof(Header));
 	write(_file, &m_sections, sizeof(SectionIndex));
@@ -570,4 +591,78 @@ void SlimKTX2::log(const char* _pFormat, ...)
 uint32_t SlimKTX2::getKtxLevel(uint32_t _level) const
 {
 	return getLevelCount() - _level - 1u;
+}
+
+void SlimKTX2::destroyDFD(DataFormatDesc& _dfd)
+{
+	auto* pBlock = _dfd.pBlocks;
+	while (pBlock != nullptr)
+	{
+		auto* pNext = pBlock->pNext;
+		pBlock->pNext = nullptr;
+
+		if (pBlock->pSamples != nullptr)
+		{
+			free(pBlock->pSamples);
+			pBlock->pSamples = nullptr;
+		}
+
+		free(pBlock);
+		pBlock = pNext;
+	};
+	_dfd.pBlocks = nullptr;
+}
+
+bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
+{
+	if (read(_file, &m_dfd.totalSize, sizeof(uint32_t)) != sizeof(uint32_t))
+	{
+		return false;
+	}
+
+	uint32_t remainingSize = m_dfd.totalSize;
+
+	auto* pBlock = m_dfd.pBlocks;
+	// we still have data to read
+	while (remainingSize >= DataFormatDesc::blockHeaderSize)
+	{
+		auto* pNew = allocate<DataFormatDesc::Block>();
+
+		if (pBlock != nullptr)
+		{
+			pBlock->pNext = pNew;
+		}
+		else
+		{
+			m_dfd.pBlocks = pNew;
+		}
+
+		if (read(_file, &pNew->header, sizeof(DataFormatDesc::BlockHeader)) != sizeof(DataFormatDesc::BlockHeader))
+		{
+			destroyDFD(_dfd);
+			return false;
+		}
+
+		uint32_t numSamples = pNew->getSampleCount(pNew->header);
+		const size_t sampleSize = numSamples * sizeof(uint32_t);
+
+		remainingSize -= sizeof(DataFormatDesc::BlockHeader);
+
+		if (numSamples > 0 && remainingSize >= sampleSize)
+		{
+			pNew->pSamples = reinterpret_cast<uint32_t*>(allocate(sampleSize));
+
+			if (read(_file, pNew->pSamples, sampleSize) != sampleSize)
+			{
+				destroyDFD(_dfd);
+				return false;
+			}
+
+			remainingSize -= static_cast<uint32_t>(sampleSize);
+		}
+
+		pBlock = pNew;
+	}
+
+	return true;
 }
