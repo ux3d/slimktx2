@@ -643,14 +643,14 @@ bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 			return false;
 		}
 
-		uint32_t numSamples = pNew->getSampleCount(pNew->header);
-		const size_t sampleSize = numSamples * sizeof(uint32_t);
+		const uint32_t numSamples = pNew->getSampleCount(pNew->header);
+		const size_t sampleSize = numSamples * sizeof(DataFormatDesc::Sample);
 
 		remainingSize -= sizeof(DataFormatDesc::BlockHeader);
 
 		if (numSamples > 0 && remainingSize >= sampleSize)
 		{
-			pNew->pSamples = reinterpret_cast<uint32_t*>(allocate(sampleSize));
+			pNew->pSamples = reinterpret_cast<DataFormatDesc::Sample*>(allocate(sampleSize));
 
 			if (read(_file, pNew->pSamples, sampleSize) != sampleSize)
 			{
@@ -665,4 +665,16 @@ bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 	}
 
 	return true;
+}
+
+DataFormatDesc::BlockHeader::BlockHeader() :
+	vendorId(0u), // KHR
+	type(0u), // basicformat
+	versionNumber(2u), // v1.3
+	blockSize(blockHeaderSize),
+	colorModel(0u), // unspecified
+	colorPrimaries(0u), // unspecified
+	transferFunction(0u), // linear
+	flags(0u) // alpha straight
+{
 }

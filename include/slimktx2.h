@@ -205,7 +205,7 @@ namespace ux3d
 			//https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#DescriptorPrefix
 			struct BlockHeader 
 			{
-				uint32_t vendorId : 17;
+				uint32_t vendorId: 17;
 				uint32_t type : 15;
 				uint32_t : 0; // start new word
 
@@ -233,20 +233,25 @@ namespace ux3d
 				uint64_t bytesPlane5 : 4;
 				uint64_t bytesPlane6 : 4;
 				uint64_t bytesPlane7 : 4;
+
+				BlockHeader();
 			};
 
+			struct Sample { uint32_t data[4]; }; // TODO: https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#_anchor_id_sample_xreflabel_sample_sample_information
+
 			static constexpr uint32_t blockHeaderSize = sizeof(BlockHeader); // 24u
+			static constexpr uint32_t sampleSize = sizeof(Sample); // 16u
 
 			struct Block
 			{
-				uint32_t getSampleCount(const BlockHeader& _header) const { return (_header.blockSize - blockHeaderSize) / 4u; }
-				void setSampleCount(BlockHeader& _header, uint32_t _sampleCount) { _header.blockSize = blockHeaderSize + _sampleCount * 4u; }
+				uint32_t getSampleCount(const BlockHeader& _header) const { return (_header.blockSize - blockHeaderSize) / sampleSize; }
+				void setSampleCount(BlockHeader& _header, uint32_t _sampleCount) { _header.blockSize = blockHeaderSize + _sampleCount * sampleSize; }
 
 				BlockHeader header{};
 				// ...
 				// Sample information for the first sample
 				// Sample information for the second sample (optional), etc.
-				uint32_t* pSamples = nullptr; // uint32_t[sampleCount]
+				Sample* pSamples = nullptr; // uint32_t[sampleCount]
 				Block* pNext = nullptr;
 			};
 
