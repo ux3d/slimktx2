@@ -362,10 +362,16 @@ namespace ux3d
 			void free(void* _pData);
 
 			template<class T>
-			T* allocate() { return reinterpret_cast<T*>(sizeof(T)); }
+			T* allocateArray(size_t _count = 1u) { return reinterpret_cast<T*>(sizeof(T) * _count); }
 
-			size_t read(IOHandle _file, void* _pData, size_t _size);
+			template<class T>
+			bool read(IOHandle _file, T* _pData, size_t _count = 1u) { return sizeof(T) * _count == m_callbacks.read(m_callbacks.userData, _file, reinterpret_cast<void*>(_pData), sizeof(T) * _count); }
+
 			void write(IOHandle _file, const void* _pData, size_t _size);
+			
+			template<class T>
+			void write(IOHandle _file, const T* _pData, size_t _count = 1u) { write(_file, reinterpret_cast<const void*>(_pData), sizeof(T)* _count); }
+
 			size_t tell(const IOHandle _file);
 			bool seek(IOHandle _file, size_t _offset);
 

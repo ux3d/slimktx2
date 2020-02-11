@@ -258,7 +258,7 @@ Result SlimKTX2::parse(IOHandle _file)
 {
 	clear();
 
-	if (sizeof(Header) != read(_file, &m_header, sizeof(Header)))
+	if (read(_file, &m_header) == false)
 	{
 		return Result::IOReadFail;
 	}
@@ -268,17 +268,16 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::InvalidIdentifier;
 	}
 
-	if (sizeof(SectionIndex) != read(_file, &m_sections, sizeof(SectionIndex)))
+	if (read(_file, &m_sections) == false)
 	{
 		return Result::IOReadFail;
 	}
 
 	const uint32_t levelCount = getLevelCount();
-	const size_t levelIndexSize = sizeof(LevelIndex) * levelCount;
 
-	m_pLevels = static_cast<LevelIndex*>(allocate(levelIndexSize));
+	m_pLevels = allocateArray<LevelIndex>(levelCount);
 
-	if (levelIndexSize != read(_file, m_pLevels, levelIndexSize))
+	if (read(_file, m_pLevels, levelCount) == false)
 	{
 		return Result::IOReadFail;
 	}
@@ -308,7 +307,7 @@ Result SlimKTX2::parse(IOHandle _file)
 
 	m_pContainer = static_cast<uint8_t*>(allocate(containerSize));
 
-	if (containerSize != read(_file, m_pContainer, containerSize))
+	if (read(_file, m_pContainer, containerSize) == false)
 	{
 		return Result::IOReadFail;
 	}
@@ -557,11 +556,6 @@ void SlimKTX2::free(void* _pData)
 	m_callbacks.free(m_callbacks.userData, _pData);
 }
 
-size_t SlimKTX2::read(IOHandle _file, void* _pData, size_t _size)
-{
-	return m_callbacks.read(m_callbacks.userData, _file, _pData, _size);
-}
-
 void SlimKTX2::write(IOHandle _file, const void* _pData, size_t _size)
 {
 	m_callbacks.write(m_callbacks.userData, _file, _pData, _size);
@@ -615,7 +609,7 @@ void SlimKTX2::destroyDFD(DataFormatDesc& _dfd)
 
 bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 {
-	if (read(_file, &m_dfd.totalSize, sizeof(uint32_t)) != sizeof(uint32_t))
+	if (read(_file, &m_dfd.totalSize) == false)
 	{
 		return false;
 	}
@@ -626,7 +620,7 @@ bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 	// we still have data to read
 	while (remainingSize >= DataFormatDesc::blockHeaderSize)
 	{
-		auto* pNew = allocate<DataFormatDesc::Block>();
+		auto* pNew = allocateArray<DataFormatDesc::Block>();
 
 		if (pBlock != nullptr)
 		{
@@ -637,7 +631,7 @@ bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 			m_dfd.pBlocks = pNew;
 		}
 
-		if (read(_file, &pNew->header, sizeof(DataFormatDesc::BlockHeader)) != sizeof(DataFormatDesc::BlockHeader))
+		if (read(_file, &pNew->header) == false)
 		{
 			destroyDFD(_dfd);
 			return false;
@@ -650,9 +644,9 @@ bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 
 		if (numSamples > 0 && remainingSize >= sampleSize)
 		{
-			pNew->pSamples = reinterpret_cast<DataFormatDesc::Sample*>(allocate(sampleSize));
+			pNew->pSamples = allocateArray<DataFormatDesc::Sample>(numSamples);
 
-			if (read(_file, pNew->pSamples, sampleSize) != sampleSize)
+			if (read(_file, pNew->pSamples, numSamples) == false)
 			{
 				destroyDFD(_dfd);
 				return false;
