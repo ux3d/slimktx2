@@ -244,8 +244,8 @@ namespace ux3d
 
 			struct Block
 			{
-				uint32_t getSampleCount(const BlockHeader& _header) const { return (_header.blockSize - blockHeaderSize) / sampleSize; }
-				void setSampleCount(BlockHeader& _header, uint32_t _sampleCount) { _header.blockSize = blockHeaderSize + _sampleCount * sampleSize; }
+				uint32_t getSampleCount() const { return (header.blockSize - blockHeaderSize) / sampleSize; }
+				void setSampleCount(uint32_t _sampleCount) { header.blockSize = blockHeaderSize + _sampleCount * sampleSize; }
 
 				BlockHeader header{};
 				// ...
@@ -365,12 +365,10 @@ namespace ux3d
 			T* allocateArray(size_t _count = 1u) { return reinterpret_cast<T*>(sizeof(T) * _count); }
 
 			template<class T>
-			bool read(IOHandle _file, T* _pData, size_t _count = 1u) { return sizeof(T) * _count == m_callbacks.read(m_callbacks.userData, _file, reinterpret_cast<void*>(_pData), sizeof(T) * _count); }
+			bool read(IOHandle _file, T* _pData, size_t _count = 1u) { return sizeof(T) * _count == m_callbacks.read(m_callbacks.userData, _file, _pData, sizeof(T) * _count); }
 
-			void write(IOHandle _file, const void* _pData, size_t _size);
-			
 			template<class T>
-			void write(IOHandle _file, const T* _pData, size_t _count = 1u) { write(_file, reinterpret_cast<const void*>(_pData), sizeof(T)* _count); }
+			void write(IOHandle _file, const T* _pData, size_t _count = 1u) { m_callbacks.write(m_callbacks.userData, _file, _pData, sizeof(T)* _count); }
 
 			size_t tell(const IOHandle _file);
 			bool seek(IOHandle _file, size_t _offset);
@@ -379,8 +377,9 @@ namespace ux3d
 
 			uint32_t getKtxLevel(uint32_t _level) const;
 
-			void destroyDFD(DataFormatDesc& _dfd);
-			bool readDFD(IOHandle _file, DataFormatDesc& _dfd);
+			void destroyDFD();
+			bool readDFD(IOHandle _file);
+			bool writeDFD(IOHandle _file);
 
 		private:
 			Callbacks m_callbacks{};

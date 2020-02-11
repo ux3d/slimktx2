@@ -43,7 +43,7 @@ void SlimKTX2::clear()
 	m_pLevels = nullptr;
 
 	// DFD
-	destroyDFD(m_dfd);
+	destroyDFD();
 
 	// mip map array
 	if (m_pContainer != nullptr)
@@ -288,7 +288,7 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	if (readDFD(_file, m_dfd) == false)
+	if (readDFD(_file) == false)
 	{
 		return Result::IOReadFail;
 	}
@@ -334,9 +334,9 @@ Result SlimKTX2::serialize(IOHandle _file)
 	//	return Result::DataFormatDescNotAllocated;
 	//}
 
-	write(_file, &m_header, sizeof(Header));
-	write(_file, &m_sections, sizeof(SectionIndex));
-	write(_file, m_pLevels, sizeof(LevelIndex) * m_header.levelCount);
+	write(_file, &m_header);
+	write(_file, &m_sections);
+	write(_file, m_pLevels, m_header.levelCount);
 
 	// TODO: write dfd, kvd and sgd
 	// dfd and kvd are required fields and the validator will emit warnings
@@ -556,11 +556,6 @@ void SlimKTX2::free(void* _pData)
 	m_callbacks.free(m_callbacks.userData, _pData);
 }
 
-void SlimKTX2::write(IOHandle _file, const void* _pData, size_t _size)
-{
-	m_callbacks.write(m_callbacks.userData, _file, _pData, _size);
-}
-
 size_t SlimKTX2::tell(const IOHandle _file)
 {
 	return m_callbacks.tell(m_callbacks.userData, _file);
@@ -587,9 +582,9 @@ uint32_t SlimKTX2::getKtxLevel(uint32_t _level) const
 	return getLevelCount() - _level - 1u;
 }
 
-void SlimKTX2::destroyDFD(DataFormatDesc& _dfd)
+void SlimKTX2::destroyDFD()
 {
-	auto* pBlock = _dfd.pBlocks;
+	auto* pBlock = m_dfd.pBlocks;
 	while (pBlock != nullptr)
 	{
 		auto* pNext = pBlock->pNext;
@@ -604,10 +599,10 @@ void SlimKTX2::destroyDFD(DataFormatDesc& _dfd)
 		free(pBlock);
 		pBlock = pNext;
 	};
-	_dfd.pBlocks = nullptr;
+	m_dfd.pBlocks = nullptr;
 }
 
-bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
+bool SlimKTX2::readDFD(IOHandle _file)
 {
 	if (read(_file, &m_dfd.totalSize) == false)
 	{
@@ -633,11 +628,11 @@ bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 
 		if (read(_file, &pNew->header) == false)
 		{
-			destroyDFD(_dfd);
+			destroyDFD();
 			return false;
 		}
 
-		const uint32_t numSamples = pNew->getSampleCount(pNew->header);
+		const uint32_t numSamples = pNew->getSampleCount();
 		const size_t sampleSize = numSamples * sizeof(DataFormatDesc::Sample);
 
 		remainingSize -= sizeof(DataFormatDesc::BlockHeader);
@@ -648,7 +643,7 @@ bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 
 			if (read(_file, pNew->pSamples, numSamples) == false)
 			{
-				destroyDFD(_dfd);
+				destroyDFD();
 				return false;
 			}
 
@@ -659,6 +654,28 @@ bool SlimKTX2::readDFD(IOHandle _file, DataFormatDesc& _dfd)
 	}
 
 	return true;
+}
+
+bool SlimKTX2::writeDFD(IOHandle _file)
+{
+	// TODO: validate total size
+	write(_file, &m_dfd.totalSize);
+
+	auto* pBlock = m_dfd.pBlocks;
+	while (pBlock != nullptr)
+	{
+		write(_file, &pBlock->header);
+
+		if (pBlock->pSamples != nullptr)
+		{
+			const uint32_t numSamples = pBlock->getSampleCount();
+			write(_file, pBlock->pSamples, numSamples);
+		}
+
+		pBlock = pBlock->pNext;
+	};
+
+	return false;
 }
 
 DataFormatDesc::BlockHeader::BlockHeader() :
