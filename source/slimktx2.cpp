@@ -334,6 +334,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 		return Result::DataFormatDescNotAllocated;
 	}
 
+	// should not change since SpecifyFormat
 	m_sections.dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
 	m_sections.dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
 	m_sections.kvdByteLength = 0u; // TODO compute
@@ -353,7 +354,21 @@ Result SlimKTX2::serialize(IOHandle _file)
 	// dfd and kvd are required fields and the validator will emit warnings
 	// some parser implementation still work as they also ignore those fields.
 
+	// after kvd, before sdg
+	if (m_sections.sgdByteLength > 0u)
+	{
+		writePadding(_file, padding(m_sections.sgdByteOffset, 8u));
+	}
+
 	const uint64_t containerSize = getContainerSize();
+
+	const LevelIndex& idx = m_pLevels[m_header.levelCount - 1];
+	auto curPos = tell(_file);
+
+	if (idx.byteOffset != curPos)
+	{
+		return Result::IOWriteFail;
+	}
 
 	write(_file, m_pContainer, containerSize);
 
@@ -570,6 +585,15 @@ void* SlimKTX2::allocate(size_t _size)
 void SlimKTX2::free(void* _pData)
 {
 	m_callbacks.free(m_callbacks.userData, _pData);
+}
+
+void ux3d::slimktx2::SlimKTX2::writePadding(IOHandle _file, size_t _byteSize) const
+{
+	const uint8_t pad = 0u;
+	for (uint32_t i = 0; i < _byteSize; ++i)
+	{
+		write(_file, &pad);
+	}
 }
 
 size_t SlimKTX2::tell(const IOHandle _file)

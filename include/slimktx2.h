@@ -278,6 +278,7 @@ namespace ux3d
 			Success = 0u,
 			NotImplemented,
 			IOReadFail,
+			IOWriteFail,
 			InvalidIdentifier,
 			InvalidImageSize, // setImage _byteSize does not match information of specifyFormat
 			InvalidLevelIndex,
@@ -372,6 +373,8 @@ namespace ux3d
 
 			template<class T>
 			void write(IOHandle _file, const T* _pData, size_t _count = 1u) const { m_callbacks.write(m_callbacks.userData, _file, _pData, sizeof(T)* _count); }
+
+			void writePadding(IOHandle _file, size_t _byteSize) const;
 
 			size_t tell(const IOHandle _file);
 			bool seek(IOHandle _file, size_t _offset);
