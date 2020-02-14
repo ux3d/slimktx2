@@ -192,7 +192,6 @@ uint64_t SlimKTX2::getContainerImageOffset(uint32_t _level, uint32_t _face, uint
 	// small to large levels
 	for (uint32_t l = getLevelCount() - 1u; l > _level; --l)
 	{
-		//const uint64_t levelSize = m_pLevels[l].byteLength;
 		const uint64_t levelSize = getFaceSize(pixelSize, l, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth) * getFaceCount() * getLayerCount();
 		offset += levelSize;
 		offset += mipPadding(levelSize, pixelSize);
@@ -334,7 +333,9 @@ Result SlimKTX2::serialize(IOHandle _file)
 		return Result::DataFormatDescNotAllocated;
 	}
 
-	// should not change since SpecifyFormat
+	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
+	const uint32_t levelCount = getLevelCount();
+
 	m_sections.dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
 	m_sections.dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
 	m_sections.kvdByteLength = 0u; // TODO compute
@@ -342,11 +343,46 @@ Result SlimKTX2::serialize(IOHandle _file)
 	m_sections.sgdByteLength = 0u; // TODO compute
 	m_sections.sgdByteOffset = static_cast<uint64_t>(m_sections.kvdByteOffset) + static_cast<uint64_t>(m_sections.kvdByteLength);
 
+	const uint32_t sdgPadding = padding(m_sections.sgdByteOffset, 8u);
+
+	if (m_sections.sgdByteLength > 0u)
+	{
+		m_sections.sgdByteOffset += sdgPadding;
+	}
+
+	uint64_t levelOffset = m_sections.sgdByteOffset + m_sections.sgdByteLength;
+
+	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
+	{
+		levelOffset += mipPadding(levelOffset, pixelSize);
+
+		// start with the small level, fill them in reverse
+		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		levelSize *= m_header.faceCount;
+		levelSize *= getLayerCount();
+
+		// absolute levelOffset within the file
+		m_pLevels[level].byteOffset = levelOffset;
+		m_pLevels[level].byteLength = levelSize;
+		m_pLevels[level].uncompressedByteLength = levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
+
+		log("level %u offset %llu length %llu\n", level, levelOffset, levelSize);
+
+		levelOffset += levelSize;
+	}
+
 	write(_file, &m_header);
 
 	write(_file, &m_sections);
 
 	write(_file, m_pLevels, m_header.levelCount);
+
+	auto curPos = tell(_file);
+
+	if (curPos != m_sections.dfdByteOffset)
+	{
+		return Result::IOWriteFail;
+	}
 
 	writeDFD(_file);
 
@@ -357,16 +393,21 @@ Result SlimKTX2::serialize(IOHandle _file)
 	// after kvd, before sdg
 	if (m_sections.sgdByteLength > 0u)
 	{
-		writePadding(_file, padding(m_sections.sgdByteOffset, 8u));
+		writePadding(_file, sdgPadding);
 	}
 
 	const uint64_t containerSize = getContainerSize();
 
 	const LevelIndex& idx = m_pLevels[m_header.levelCount - 1];
-	auto curPos = tell(_file);
+
+	// workaround until we refactor mip level array container
+	const uint32_t levelContainerPadding = mipPadding(m_sections.sgdByteOffset + m_sections.sgdByteLength, pixelSize);
+
+	writePadding(_file, levelContainerPadding);
+	curPos = tell(_file);
 
 	if (idx.byteOffset != curPos)
-	{
+	{		
 		return Result::IOWriteFail;
 	}
 
@@ -435,37 +476,6 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	// TODO: fill with meaningful data
 	m_dfd.pBlocks = allocateArray<DataFormatDesc::Block>();
 	m_dfd.totalSize = m_dfd.computeSize();
-	m_sections.dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // totalSize member
-
-	m_sections.dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + levelIndexSize;
-	m_sections.kvdByteOffset = m_sections.dfdByteOffset + m_sections.dfdByteLength;
-	m_sections.sgdByteOffset = static_cast<uint64_t>(m_sections.kvdByteOffset) + static_cast<uint64_t>(m_sections.kvdByteLength);
-
-	if (m_sections.sgdByteLength > 0u)
-	{
-		m_sections.sgdByteOffset += padding(m_sections.sgdByteOffset, 8u);
-	}
-
-	uint64_t offset = m_sections.sgdByteOffset + m_sections.sgdByteLength;
-
-	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
-	{
-		offset += mipPadding(offset, pixelSize);
-
-		// start with the small level, fill them in reverse
-		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
-		levelSize *= m_header.faceCount;
-		levelSize *= getLayerCount();
-
-		// absolute offset within the file
-		m_pLevels[level].byteOffset = offset;
-		m_pLevels[level].byteLength = levelSize;
-		m_pLevels[level].uncompressedByteLength = levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
-
-		log("level %u offset %llu length %llu\n", level, offset, levelSize);
-
-		offset += levelSize;
-	}
 
 	return Result::Success;
 }
@@ -517,12 +527,9 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 	}
 
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-	const uint64_t imageSize = m_pLevels[_level].byteLength / m_header.faceCount / getLayerCount();
+	const uint64_t imageSize = getFaceSize(pixelSize, _level,  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 
-	// for debugging: size of one mip level image
-	const uint64_t dbgSize = getFaceSize(pixelSize, _level,  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
-
-	if (_byteSize != imageSize || _byteSize != dbgSize)
+	if (_byteSize != imageSize)
 	{
 		return Result::InvalidImageSize;
 	}
@@ -565,7 +572,7 @@ Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _fa
 		// for debugging
 		const uint64_t containerSize = getContainerSize();
 
-		// offset / image out of container bounds
+		// levelOffset / image out of container bounds
 		if (offset + _imageSize > containerSize)
 		{
 			return Result::InvalidImageSize;
