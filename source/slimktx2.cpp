@@ -339,7 +339,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 	m_sections.kvdByteLength = 0u; // TODO compute
 	m_sections.kvdByteOffset = m_sections.dfdByteOffset + m_sections.dfdByteLength;
 	m_sections.sgdByteLength = 0u; // TODO compute
-	m_sections.sgdByteOffset = m_sections.kvdByteOffset + m_sections.kvdByteLength;
+	m_sections.sgdByteOffset = static_cast<uint64_t>(m_sections.kvdByteOffset) + static_cast<uint64_t>(m_sections.kvdByteLength);
 
 	write(_file, &m_header);
 
@@ -424,7 +424,7 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 
 	m_sections.dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + levelIndexSize;
 	m_sections.kvdByteOffset = m_sections.dfdByteOffset + m_sections.dfdByteLength;
-	m_sections.sgdByteOffset = m_sections.kvdByteOffset + m_sections.kvdByteLength;
+	m_sections.sgdByteOffset = static_cast<uint64_t>(m_sections.kvdByteOffset) + static_cast<uint64_t>(m_sections.kvdByteLength);
 
 	if (m_sections.sgdByteLength > 0u)
 	{
@@ -727,7 +727,7 @@ uint32_t DataFormatDesc::computeSize() const
 
 		if (pBlock->pSamples != nullptr)
 		{
-			size += pBlock->getSampleCount() * sampleSize;			
+			size += static_cast<uint64_t>(pBlock->getSampleCount()) * sampleSize;
 		}
 
 		pBlock = pBlock->pNext;

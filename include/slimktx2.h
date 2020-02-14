@@ -211,7 +211,7 @@ namespace ux3d
 				uint32_t : 0; // start new word
 
 				uint32_t versionNumber : 16;
-				uint32_t blockSize : 16; // = 24 + 16 × #samples
+				uint32_t blockSize : 16; // = 24 + 16 x #samples
 				uint32_t : 0; // start new word
 
 				uint32_t colorModel : 4;
