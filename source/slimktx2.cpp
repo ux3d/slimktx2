@@ -336,21 +336,21 @@ Result SlimKTX2::serialize(IOHandle _file)
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 	const uint32_t levelCount = getLevelCount();
 
-	m_sections.dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
-	m_sections.dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
-	m_sections.kvdByteLength = 0u; // TODO compute
-	m_sections.kvdByteOffset = m_sections.dfdByteOffset + m_sections.dfdByteLength;
-	m_sections.sgdByteLength = 0u; // TODO compute
-	m_sections.sgdByteOffset = static_cast<uint64_t>(m_sections.kvdByteOffset) + static_cast<uint64_t>(m_sections.kvdByteLength);
+	const uint32_t dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
+	const uint32_t dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
+	const uint32_t kvdByteLength = 0u; // TODO compute
+	const uint32_t kvdByteOffset = dfdByteOffset + dfdByteLength;
+	const uint64_t sgdByteLength = 0u;
+	/*const*/ uint64_t sgdByteOffset = kvdByteOffset + kvdByteLength;
 
-	const uint32_t sdgPadding = padding(m_sections.sgdByteOffset, 8u);
+	const uint32_t sdgPadding = padding(sgdByteOffset, 8u);
 
-	if (m_sections.sgdByteLength > 0u)
+	if (sgdByteLength > 0u)
 	{
-		m_sections.sgdByteOffset += sdgPadding;
+		sgdByteOffset += sdgPadding;
 	}
 
-	uint64_t levelOffset = m_sections.sgdByteOffset + m_sections.sgdByteLength;
+	uint64_t levelOffset = sgdByteOffset + sgdByteLength;
 
 	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 	{
@@ -372,6 +372,16 @@ Result SlimKTX2::serialize(IOHandle _file)
 	}
 
 	write(_file, &m_header);
+
+	m_sections.dfdByteLength = dfdByteLength;
+	m_sections.dfdByteOffset = dfdByteLength != 0u ? dfdByteOffset : 0u;
+
+	m_sections.kvdByteLength = kvdByteLength;
+	m_sections.kvdByteOffset = kvdByteLength != 0u ? kvdByteOffset : 0u;
+
+	//sdg is optional
+	m_sections.sgdByteLength = sgdByteLength;
+	m_sections.sgdByteOffset = sgdByteLength != 0u ? sgdByteOffset : 0u;
 
 	write(_file, &m_sections);
 
@@ -400,16 +410,12 @@ Result SlimKTX2::serialize(IOHandle _file)
 
 	const LevelIndex& idx = m_pLevels[m_header.levelCount - 1];
 
-	// workaround until we refactor mip level array container
-	const uint32_t levelContainerPadding = mipPadding(m_sections.sgdByteOffset + m_sections.sgdByteLength, pixelSize);
-
-	writePadding(_file, levelContainerPadding);
 	curPos = tell(_file);
 
-	if (idx.byteOffset != curPos)
-	{		
-		return Result::IOWriteFail;
-	}
+	// workaround until we refactor mip level array container
+	const uint32_t levelContainerPadding = mipPadding(curPos, pixelSize);
+
+	writePadding(_file, levelContainerPadding);
 
 	write(_file, m_pContainer, containerSize);
 
