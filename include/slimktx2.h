@@ -323,15 +323,10 @@ namespace ux3d
 			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 0u, uint32_t _layerCount = 0u);
 
 			// allocates all image memory required for setImage
-			Result allocateContainer();
-
-			uint64_t getContainerSize() const;
-
-			//returns pointer to container
-			uint8_t* getContainerPointer() const;
+			Result allocateMipLevelArray();
 
 			// compute byte offset withing m_pContainer for the specified level, face and layer indices, requres m_pLevels to be initialized
-			uint64_t getContainerImageOffset(uint32_t _level, uint32_t _face, uint32_t _layer) const;
+			uint64_t getFaceImageOffset(uint32_t _level, uint32_t _face, uint32_t _layer) const;
 
 			// copy image data to container (that was allocated by allocateContainer)
 			Result setImage(const void* _pData, size_t _byteSize, uint32_t _level, uint32_t _face, uint32_t _layer);
@@ -387,6 +382,8 @@ namespace ux3d
 			bool readDFD(IOHandle _file);
 			void writeDFD(IOHandle _file) const;
 
+			void destoryMipLevelArray();
+
 		private:
 			Callbacks m_callbacks{};
 
@@ -399,7 +396,7 @@ namespace ux3d
 			DataFormatDesc m_dfd{};
 
 			// mipLevel array
-			uint8_t* m_pContainer = nullptr;
+			uint8_t** m_pMipLevelArray = nullptr;
 		};
 	}// !slimktx2
 } // ux3d
