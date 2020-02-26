@@ -401,9 +401,9 @@ Result SlimKTX2::serialize(IOHandle _file)
 		writePadding(_file, sdgPadding);
 	}
 
-	for (int32_t i = levelCount - 1; i > 0; --i)
+	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 	{
-		const LevelIndex& lvl = m_pLevels[i];
+		const LevelIndex& lvl = m_pLevels[level];
 
 		curPos = tell(_file);
 
@@ -417,10 +417,19 @@ Result SlimKTX2::serialize(IOHandle _file)
 		// skip to first level
 		if (lvl.byteOffset != curPos)
 		{
-			return Result::IOReadFail;
+			return Result::IOWriteFail;
 		}
 
-		write(_file, m_pMipLevelArray[i], lvl.byteLength);
+		write(_file, m_pMipLevelArray[level], lvl.byteLength);
+	}
+
+	curPos = tell(_file);
+
+	log("Total file size %llu\n", curPos);
+
+	if (levelOffset != curPos)
+	{
+		return Result::IOWriteFail;
 	}
 
 	return Result::Success;
