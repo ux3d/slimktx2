@@ -342,8 +342,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 	const uint32_t levelCount = getLevelCount();
 
-	// Dont write DFD for now
-	const uint32_t dfdByteLength = 0u; // m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
+	const uint32_t dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
 	const uint32_t dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
 	const uint32_t kvdByteLength = 0u; // TODO compute
 	const uint32_t kvdByteOffset = dfdByteOffset + dfdByteLength;
