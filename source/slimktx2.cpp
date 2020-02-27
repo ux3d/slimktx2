@@ -327,6 +327,9 @@ Result SlimKTX2::serialize(IOHandle _file)
 		return Result::DataFormatDescNotAllocated;
 	}
 
+	const size_t streamStart = tell(_file);
+	auto filePos = [&](IOHandle file) -> size_t { return tell(file) - streamStart; };
+
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 	const uint32_t levelCount = getLevelCount();
 
@@ -361,8 +364,6 @@ Result SlimKTX2::serialize(IOHandle _file)
 		m_pLevels[level].byteLength = levelSize;
 		m_pLevels[level].uncompressedByteLength = levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
 
-		log("level %u offset %llu length %llu\n", level, levelOffset, levelSize);
-
 		levelOffset += levelSize;
 	}
 
@@ -378,12 +379,16 @@ Result SlimKTX2::serialize(IOHandle _file)
 	m_sections.sgdByteLength = sgdByteLength;
 	m_sections.sgdByteOffset = sgdByteLength != 0u ? sgdByteOffset : 0u;
 
+	size_t curPos = filePos(_file);
+	log("SectionIndex offset %llu\n", curPos);
 	write(_file, &m_sections);
 
+	curPos = filePos(_file);
+	log("LevelIndex offset %llu\n", curPos);
 	write(_file, m_pLevels, m_header.levelCount);
 
-	auto curPos = tell(_file);
-
+	curPos = filePos(_file);
+	log("DFD offset %llu\n", curPos);
 	if (curPos != m_sections.dfdByteOffset)
 	{
 		return Result::IOWriteFail;
@@ -405,14 +410,16 @@ Result SlimKTX2::serialize(IOHandle _file)
 	{
 		const LevelIndex& lvl = m_pLevels[level];
 
-		curPos = tell(_file);
+		curPos = filePos(_file);
 
 		// workaround until we refactor mip level array container
 		const uint32_t levelContainerPadding = mipPadding(curPos, pixelSize);
 
 		writePadding(_file, levelContainerPadding);
 
-		curPos = tell(_file);
+		curPos = filePos(_file);
+
+		log("level %u offset %llu length %llu\n", level, lvl.byteOffset, lvl.byteLength);
 
 		// skip to first level
 		if (lvl.byteOffset != curPos)
@@ -423,8 +430,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 		write(_file, m_pMipLevelArray[level], lvl.byteLength);
 	}
 
-	curPos = tell(_file);
-
+	curPos = filePos(_file);
 	log("Total file size %llu\n", curPos);
 
 	if (levelOffset != curPos)
