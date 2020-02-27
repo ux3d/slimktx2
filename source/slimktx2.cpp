@@ -233,9 +233,18 @@ uint32_t SlimKTX2::lcm(uint32_t _x, uint32_t _y)
 	return max;
 }
 
-uint32_t SlimKTX2::mipPadding(uint64_t _value, uint32_t _pixelByteSize)
+uint32_t SlimKTX2::mipPadding(uint64_t _value, Format _vkFormat, bool _superCompression)
 {
-	const uint32_t texelBlockSize = _pixelByteSize != 0u ? _pixelByteSize : 16u;
+	if (_superCompression)
+	{
+		return 0; // 1u byte alignment
+	}
+	else if (_vkFormat == Format::UNDEFINED)
+	{
+		return SlimKTX2::padding(_value, 16u); // 16 byte alignment
+	}
+
+	const uint32_t texelBlockSize = getPixelSize(_vkFormat);
 	const uint32_t lcm = SlimKTX2::lcm(texelBlockSize, 4u);
 	const uint32_t padding = SlimKTX2::padding(_value, lcm);
 	return padding;
@@ -333,7 +342,8 @@ Result SlimKTX2::serialize(IOHandle _file)
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 	const uint32_t levelCount = getLevelCount();
 
-	const uint32_t dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
+	// Dont write DFD for now
+	const uint32_t dfdByteLength = 0u; // m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
 	const uint32_t dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
 	const uint32_t kvdByteLength = 0u; // TODO compute
 	const uint32_t kvdByteOffset = dfdByteOffset + dfdByteLength;
@@ -351,8 +361,8 @@ Result SlimKTX2::serialize(IOHandle _file)
 
 	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 	{
-		const auto alignment = mipPadding(levelOffset, pixelSize);
-		levelOffset += alignment;
+		const uint32_t mipPad = mipPadding(levelOffset, m_header.vkFormat, m_header.supercompressionScheme != 0u);
+		levelOffset += mipPad;
 
 		// start with the small level, fill them in reverse
 		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
@@ -370,7 +380,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 	write(_file, &m_header);
 
 	m_sections.dfdByteLength = dfdByteLength;
-	m_sections.dfdByteOffset = dfdByteLength != 0u ? dfdByteOffset : 0u;
+	m_sections.dfdByteOffset = dfdByteOffset;
 
 	m_sections.kvdByteLength = kvdByteLength;
 	m_sections.kvdByteOffset = kvdByteLength != 0u ? kvdByteOffset : 0u;
@@ -380,21 +390,25 @@ Result SlimKTX2::serialize(IOHandle _file)
 	m_sections.sgdByteOffset = sgdByteLength != 0u ? sgdByteOffset : 0u;
 
 	size_t curPos = filePos(_file);
-	log("SectionIndex offset %llu\n", curPos);
+	log("SectionIndex offset %llu size %llu\n", curPos, sizeof(SectionIndex));
 	write(_file, &m_sections);
 
 	curPos = filePos(_file);
-	log("LevelIndex offset %llu\n", curPos);
+	log("LevelIndex offset %llu size %llu\n", curPos, sizeof(LevelIndex) * m_header.levelCount);
 	write(_file, m_pLevels, m_header.levelCount);
 
 	curPos = filePos(_file);
-	log("DFD offset %llu\n", curPos);
-	if (curPos != m_sections.dfdByteOffset)
-	{
-		return Result::IOWriteFail;
-	}
+	log("DFD offset %llu size %u\n", curPos, dfdByteLength);
 
-	writeDFD(_file);
+	if (dfdByteLength != 0u)
+	{
+		if (curPos != m_sections.dfdByteOffset)
+		{
+			return Result::IOWriteFail;
+		}
+
+		writeDFD(_file);	
+	}
 
 	// TODO: write kvd and sgd
 	// dfd and kvd are required fields and the validator will emit warnings
@@ -412,14 +426,13 @@ Result SlimKTX2::serialize(IOHandle _file)
 
 		curPos = filePos(_file);
 
-		// workaround until we refactor mip level array container
-		const uint32_t levelContainerPadding = mipPadding(curPos, pixelSize);
+		const uint32_t mipPad = mipPadding(curPos, m_header.vkFormat, m_header.supercompressionScheme != 0u);
 
-		writePadding(_file, levelContainerPadding);
+		writePadding(_file, mipPad);
 
 		curPos = filePos(_file);
 
-		log("level %u offset %llu length %llu\n", level, lvl.byteOffset, lvl.byteLength);
+		log("level %u offset %llu length %llu padding %u\n", level, lvl.byteOffset, lvl.byteLength, mipPad);
 
 		// skip to first level
 		if (lvl.byteOffset != curPos)

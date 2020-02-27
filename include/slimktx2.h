@@ -353,7 +353,8 @@ namespace ux3d
 			// greedy least common multiple
 			static uint32_t lcm(uint32_t _x, uint32_t _y);
 
-			static uint32_t mipPadding(uint64_t _value, uint32_t _pixelByteSize);
+			// _value / offset to apply lcm4 padding to (if applicable)
+			static uint32_t mipPadding(uint64_t _value, Format _vkFormat, bool _superCompression);
 
 		private:
 
