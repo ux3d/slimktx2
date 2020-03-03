@@ -255,9 +255,9 @@ uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
 	}
 }
 
-uint32_t SlimKTX2::getChannelSize(Format _vkFormat, uint32_t channel)
+uint32_t SlimKTX2::getChannelSize(Format _vkFormat, uint32_t _channelIndex)
 {
-	if (channel >= 4u)
+	if (_channelIndex >= 4u)
 	{
 		return 0u;
 	}
@@ -348,6 +348,150 @@ uint32_t SlimKTX2::getChannelSize(Format _vkFormat, uint32_t channel)
 	}
 
 	return 0u;
+}
+
+int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
+{
+	switch (_vkFormat)
+	{
+	case Format::R8_UNORM:
+	case Format::R8_SNORM:
+	case Format::R8_UINT:
+	case Format::R8_SINT:
+	case Format::R8_SRGB:
+
+	case Format::R16_UNORM:
+	case Format::R16_SNORM:
+	case Format::R16_UINT:
+	case Format::R16_SINT:
+	case Format::R16_SFLOAT:
+
+	case Format::R32_UINT:
+	case Format::R32_SINT:
+	case Format::R32_SFLOAT:
+		if (_channel <= Channel::Red)
+		{
+			return _channel;
+		}
+		else
+		{
+			return -1;
+		}
+
+	case Format::R8G8_UNORM:
+	case Format::R8G8_SNORM:
+	case Format::R8G8_UINT:
+	case Format::R8G8_SINT:
+	case Format::R8G8_SRGB:
+
+	case Format::R16G16_UNORM:
+	case Format::R16G16_SNORM:
+	case Format::R16G16_UINT:
+	case Format::R16G16_SINT:
+	case Format::R16G16_SFLOAT:
+
+	case Format::R32G32_UINT:
+	case Format::R32G32_SINT:
+	case Format::R32G32_SFLOAT:
+		if (_channel <= Channel::Green)
+		{
+			return _channel;
+		}
+		else
+		{
+			return -1;
+		}
+
+	case Format::R8G8B8_UNORM:
+	case Format::R8G8B8_SNORM:
+	case Format::R8G8B8_UINT:
+	case Format::R8G8B8_SINT:
+	case Format::R8G8B8_SRGB:
+
+	case Format::R16G16B16_UNORM:
+	case Format::R16G16B16_SNORM:
+	case Format::R16G16B16_UINT:
+	case Format::R16G16B16_SINT:
+	case Format::R16G16B16_SFLOAT:
+
+	case Format::R32G32B32_UINT:
+	case Format::R32G32B32_SINT:
+	case Format::R32G32B32_SFLOAT:
+		if (_channel <= Channel::Blue)
+		{
+			return _channel;
+		}
+		else
+		{
+			return -1;
+		}
+
+	case Format::R8G8B8A8_UNORM:
+	case Format::R8G8B8A8_SNORM:
+	case Format::R8G8B8A8_UINT:
+	case Format::R8G8B8A8_SINT:
+	case Format::R8G8B8A8_SRGB:
+
+	case Format::R16G16B16A16_UNORM:
+	case Format::R16G16B16A16_SNORM:
+	case Format::R16G16B16A16_UINT:
+	case Format::R16G16B16A16_SINT:
+	case Format::R16G16B16A16_SFLOAT:
+
+	case Format::R32G32B32A32_UINT:
+	case Format::R32G32B32A32_SINT:
+	case Format::R32G32B32A32_SFLOAT:
+		return _channel;
+
+	case Format::B8G8R8_UNORM:
+	case Format::B8G8R8_SNORM:
+	case Format::B8G8R8_UINT:
+	case Format::B8G8R8_SINT:
+	case Format::B8G8R8_SRGB:
+		if (_channel <= Channel::Blue)
+		{
+			if (_channel == Channel::Red)
+			{
+				return 2;
+			}
+			if (_channel == Channel::Green)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			return -1;
+		}
+
+	case Format::B8G8R8A8_UNORM:
+	case Format::B8G8R8A8_SNORM:
+	case Format::B8G8R8A8_UINT:
+	case Format::B8G8R8A8_SINT:
+	case Format::B8G8R8A8_SRGB:
+		if (_channel == Channel::Red)
+		{
+			return 2;
+		}
+		if (_channel == Channel::Green)
+		{
+			return 1;
+		}
+		if (_channel == Channel::Blue)
+		{
+			return 0;
+		}
+		else
+		{
+			return 3;
+		}
+	}
+
+	return -1;
 }
 
 bool SlimKTX2::isFloat(Format _vkFormat)

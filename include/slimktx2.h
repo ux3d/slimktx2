@@ -166,6 +166,14 @@ namespace ux3d
 			Zneg = Back
 		};
 
+		enum Channel
+		{
+			Red = 0,
+			Green,
+			Blue,
+			Alpha
+		};
+
 		struct Header
 		{
 			static const uint8_t Magic[12];
@@ -345,7 +353,9 @@ namespace ux3d
 
 			static uint32_t getChannelCount(Format _vkFormat);
 
-			static uint32_t getChannelSize(Format _vkFormat, uint32_t channel);
+			static uint32_t getChannelSize(Format _vkFormat, uint32_t _channelIndex);
+
+			static int32_t getChannelIndex(Format _vkFormat, Channel _channel);
 
 			static bool isFloat(Format _vkFormat);
 
