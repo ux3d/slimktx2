@@ -343,6 +343,16 @@ namespace ux3d
 			// as defined by vulkan (pixel size)
 			static uint32_t getPixelSize(Format _vkFormat);
 
+			static uint32_t getChannelCount(Format _vkFormat);
+
+			static uint32_t getChannelSize(Format _vkFormat, uint32_t channel);
+
+			static bool isFloat(Format _vkFormat);
+
+			static bool isSigned(Format _vkFormat);
+
+			static bool isNormalized(Format _vkFormat);
+
 			static uint64_t getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u);
 
 			// computes the pixel count (resolution) of an image of the given level
