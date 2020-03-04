@@ -150,6 +150,10 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	case Format::R32G32_UINT:
 	case Format::R32G32_SINT:
 	case Format::R32G32_SFLOAT:
+
+	case Format::R64_UINT:
+	case Format::R64_SINT:
+	case Format::R64_SFLOAT:
 		return 8u;
 
 		// 12 BYTE
@@ -162,7 +166,24 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	case Format::R32G32B32A32_UINT:
 	case Format::R32G32B32A32_SINT:
 	case Format::R32G32B32A32_SFLOAT:
+
+	case Format::R64G64_UINT:
+	case Format::R64G64_SINT:
+	case Format::R64G64_SFLOAT:
 		return 16u;
+
+		// 24 BYTE
+	case Format::R64G64B64_UINT:
+	case Format::R64G64B64_SINT:
+	case Format::R64G64B64_SFLOAT:
+		return 24u;
+
+		// 32 BYTE
+	case Format::R64G64B64A64_UINT:
+	case Format::R64G64B64A64_SINT:
+	case Format::R64G64B64A64_SFLOAT:
+		return 32u;
+
 	default:
 		return 0u; // invalid
 	}
@@ -187,6 +208,10 @@ uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
 	case Format::R32_UINT:
 	case Format::R32_SINT:
 	case Format::R32_SFLOAT:
+
+	case Format::R64_UINT:
+	case Format::R64_SINT:
+	case Format::R64_SFLOAT:
 		return 1u;
 
 	case Format::R8G8_UNORM:
@@ -204,6 +229,10 @@ uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
 	case Format::R32G32_UINT:
 	case Format::R32G32_SINT:
 	case Format::R32G32_SFLOAT:
+
+	case Format::R64G64_UINT:
+	case Format::R64G64_SINT:
+	case Format::R64G64_SFLOAT:
 		return 2u;
 
 	case Format::R8G8B8_UNORM:
@@ -226,6 +255,10 @@ uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
 	case Format::R32G32B32_UINT:
 	case Format::R32G32B32_SINT:
 	case Format::R32G32B32_SFLOAT:
+
+	case Format::R64G64B64_UINT:
+	case Format::R64G64B64_SINT:
+	case Format::R64G64B64_SFLOAT:
 		return 3u;
 
 	case Format::R8G8B8A8_UNORM:
@@ -248,6 +281,10 @@ uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
 	case Format::R32G32B32A32_UINT:
 	case Format::R32G32B32A32_SINT:
 	case Format::R32G32B32A32_SFLOAT:
+
+	case Format::R64G64B64A64_UINT:
+	case Format::R64G64B64A64_SINT:
+	case Format::R64G64B64A64_SFLOAT:
 		return 4u;
 
 	default:
@@ -345,6 +382,24 @@ uint32_t SlimKTX2::getChannelSize(Format _vkFormat, uint32_t _channelIndex)
 	case Format::R32G32B32A32_SINT:
 	case Format::R32G32B32A32_SFLOAT:
 		return 32u;
+
+		// 64 bits; does not depend on channel.
+	case Format::R64_UINT:
+	case Format::R64_SINT:
+	case Format::R64_SFLOAT:
+
+	case Format::R64G64_UINT:
+	case Format::R64G64_SINT:
+	case Format::R64G64_SFLOAT:
+
+	case Format::R64G64B64_UINT:
+	case Format::R64G64B64_SINT:
+	case Format::R64G64B64_SFLOAT:
+
+	case Format::R64G64B64A64_UINT:
+	case Format::R64G64B64A64_SINT:
+	case Format::R64G64B64A64_SFLOAT:
+		return 64u;
 	}
 
 	return 0u;
@@ -369,6 +424,10 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 	case Format::R32_UINT:
 	case Format::R32_SINT:
 	case Format::R32_SFLOAT:
+
+	case Format::R64_UINT:
+	case Format::R64_SINT:
+	case Format::R64_SFLOAT:
 		if (_channel <= Channel::Red)
 		{
 			return _channel;
@@ -393,6 +452,10 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 	case Format::R32G32_UINT:
 	case Format::R32G32_SINT:
 	case Format::R32G32_SFLOAT:
+
+	case Format::R64G64_UINT:
+	case Format::R64G64_SINT:
+	case Format::R64G64_SFLOAT:
 		if (_channel <= Channel::Green)
 		{
 			return _channel;
@@ -417,6 +480,10 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 	case Format::R32G32B32_UINT:
 	case Format::R32G32B32_SINT:
 	case Format::R32G32B32_SFLOAT:
+
+	case Format::R64G64B64_UINT:
+	case Format::R64G64B64_SINT:
+	case Format::R64G64B64_SFLOAT:
 		if (_channel <= Channel::Blue)
 		{
 			return _channel;
@@ -441,6 +508,10 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 	case Format::R32G32B32A32_UINT:
 	case Format::R32G32B32A32_SINT:
 	case Format::R32G32B32A32_SFLOAT:
+
+	case Format::R64G64B64A64_UINT:
+	case Format::R64G64B64A64_SINT:
+	case Format::R64G64B64A64_SFLOAT:
 		return _channel;
 
 	case Format::B8G8R8_UNORM:
@@ -514,6 +585,14 @@ bool SlimKTX2::isFloat(Format _vkFormat)
 	case Format::R32G32B32_SFLOAT:
 
 	case Format::R32G32B32A32_SFLOAT:
+
+	case Format::R64_SFLOAT:
+
+	case Format::R64G64_SFLOAT:
+
+	case Format::R64G64B64_SFLOAT:
+
+	case Format::R64G64B64A64_SFLOAT:
 		return true;
 	}
 
@@ -576,6 +655,18 @@ bool SlimKTX2::isSigned(Format _vkFormat)
 
 	case Format::R32G32B32A32_SINT:
 	case Format::R32G32B32A32_SFLOAT:
+
+	case Format::R64_SINT:
+	case Format::R64_SFLOAT:
+
+	case Format::R64G64_SINT:
+	case Format::R64G64_SFLOAT:
+
+	case Format::R64G64B64_SINT:
+	case Format::R64G64B64_SFLOAT:
+
+	case Format::R64G64B64A64_SINT:
+	case Format::R64G64B64A64_SFLOAT:
 		return true;
 	}
 
@@ -619,6 +710,32 @@ bool SlimKTX2::isNormalized(Format _vkFormat)
 		return true;
 	}
 
+	return false;
+}
+
+bool SlimKTX2::isSrgb(Format _vkFormat)
+{
+	switch (_vkFormat)
+	{
+	case Format::R8_SRGB:
+	case Format::R8G8_SRGB:
+	case Format::R8G8B8_SRGB:
+	case Format::B8G8R8_SRGB:
+	case Format::R8G8B8A8_SRGB:
+	case Format::B8G8R8A8_SRGB:
+		return true;
+	}
+
+	return false;
+}
+
+bool SlimKTX2::isPacked(Format _vkFormat)
+{
+	return false;
+}
+
+bool SlimKTX2::isCompressed(Format _vkFormat)
+{
 	return false;
 }
 

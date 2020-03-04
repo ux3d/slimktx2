@@ -146,6 +146,24 @@ namespace ux3d
 			R32G32B32A32_UINT = 107,
 			R32G32B32A32_SINT = 108,
 			R32G32B32A32_SFLOAT = 109,
+
+			///
+			/// 64 BIT PER CHANNEL
+			///
+
+			R64_UINT = 110,
+			R64_SINT = 111,
+			R64_SFLOAT = 112,
+			R64G64_UINT = 113,
+			R64G64_SINT = 114,
+			R64G64_SFLOAT = 115,
+			R64G64B64_UINT = 116,
+			R64G64B64_SINT = 117,
+			R64G64B64_SFLOAT = 118,
+			R64G64B64A64_UINT = 119,
+			R64G64B64A64_SINT = 120,
+			R64G64B64A64_SFLOAT = 121
+
 		};
 
 		// dont use enum class to allow converssion to uint32_t
@@ -362,6 +380,12 @@ namespace ux3d
 			static bool isSigned(Format _vkFormat);
 
 			static bool isNormalized(Format _vkFormat);
+
+			static bool isSrgb(Format _vkFormat);
+
+			static bool isPacked(Format _vkFormat);
+
+			static bool isCompressed(Format _vkFormat);
 
 			static uint64_t getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u);
 
