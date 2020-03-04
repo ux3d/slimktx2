@@ -65,6 +65,8 @@ uint32_t SlimKTX2::getTypeSize(Format _vkFormat)
 		return 4u;
 	}
 
+	// TODO: Implement for 64bit and packed values.
+
 	return 0u; // invalid
 }
 
@@ -73,6 +75,8 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 	switch (_vkFormat)
 	{
 		// 1 BYTE
+	case Format::R4G4_UNORM_PACK8:
+
 	case Format::R8_UNORM:
 	case Format::R8_SNORM:
 	case Format::R8_UINT:
@@ -81,6 +85,14 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 		return 1u;
 
 		// 2 BYTE
+	case Format::R4G4B4A4_UNORM_PACK16:
+	case Format::B4G4R4A4_UNORM_PACK16:
+	case Format::R5G6B5_UNORM_PACK16:
+	case Format::B5G6R5_UNORM_PACK16:
+	case Format::R5G5B5A1_UNORM_PACK16:
+	case Format::B5G5R5A1_UNORM_PACK16:
+	case Format::A1R5G5B5_UNORM_PACK16:
+
 	case Format::R8G8_UNORM:
 	case Format::R8G8_SNORM:
 	case Format::R8G8_UINT:
@@ -109,6 +121,19 @@ uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
 		return 3u;
 
 		// 4 BYTE
+	case Format::A2R10G10B10_UNORM_PACK32:
+	case Format::A2R10G10B10_SNORM_PACK32:
+
+	case Format::A2R10G10B10_UINT_PACK32:
+	case Format::A2R10G10B10_SINT_PACK32:
+	case Format::A2B10G10R10_UNORM_PACK32:
+	case Format::A2B10G10R10_SNORM_PACK32:
+
+	case Format::A2B10G10R10_UINT_PACK32:
+	case Format::A2B10G10R10_SINT_PACK32:
+
+	case Format::B10G11R11_UFLOAT_PACK32:
+
 	case Format::R8G8B8A8_UNORM:
 	case Format::R8G8B8A8_SNORM:
 	case Format::R8G8B8A8_UINT:
@@ -214,6 +239,8 @@ uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
 	case Format::R64_SFLOAT:
 		return 1u;
 
+	case Format::R4G4_UNORM_PACK8:
+
 	case Format::R8G8_UNORM:
 	case Format::R8G8_SNORM:
 	case Format::R8G8_UINT:
@@ -234,6 +261,10 @@ uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
 	case Format::R64G64_SINT:
 	case Format::R64G64_SFLOAT:
 		return 2u;
+
+	case Format::R5G6B5_UNORM_PACK16:
+	case Format::B5G6R5_UNORM_PACK16:
+	case Format::B10G11R11_UFLOAT_PACK32:
 
 	case Format::R8G8B8_UNORM:
 	case Format::R8G8B8_SNORM:
@@ -260,6 +291,23 @@ uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
 	case Format::R64G64B64_SINT:
 	case Format::R64G64B64_SFLOAT:
 		return 3u;
+
+	case Format::R4G4B4A4_UNORM_PACK16:
+	case Format::B4G4R4A4_UNORM_PACK16:
+	case Format::R5G5B5A1_UNORM_PACK16:
+	case Format::B5G5R5A1_UNORM_PACK16:
+	case Format::A1R5G5B5_UNORM_PACK16:
+
+	case Format::A2R10G10B10_UNORM_PACK32:
+	case Format::A2R10G10B10_SNORM_PACK32:
+
+	case Format::A2R10G10B10_UINT_PACK32:
+	case Format::A2R10G10B10_SINT_PACK32:
+	case Format::A2B10G10R10_UNORM_PACK32:
+	case Format::A2B10G10R10_SNORM_PACK32:
+
+	case Format::A2B10G10R10_UINT_PACK32:
+	case Format::A2B10G10R10_SINT_PACK32:
 
 	case Format::R8G8B8A8_UNORM:
 	case Format::R8G8B8A8_SNORM:
@@ -400,6 +448,95 @@ uint32_t SlimKTX2::getChannelSize(Format _vkFormat, uint32_t _channelIndex)
 	case Format::R64G64B64A64_SINT:
 	case Format::R64G64B64A64_SFLOAT:
 		return 64u;
+
+	case Format::R4G4_UNORM_PACK8:
+		if (_channelIndex < 2)
+		{
+			return 4u;
+		}
+		else
+		{
+			return 0u;
+		}
+
+	case Format::R5G6B5_UNORM_PACK16:
+	case Format::B5G6R5_UNORM_PACK16:
+		if (_channelIndex < 3)
+		{
+			if (_channelIndex == 1)
+			{
+				return 6u;
+			}
+			else
+			{
+				return 5u;
+			}
+		}
+		else
+		{
+			return 0u;
+		}
+
+	case Format::B10G11R11_UFLOAT_PACK32:
+		if (_channelIndex < 3)
+		{
+			if (_channelIndex == 0)
+			{
+				return 10u;
+			}
+			else
+			{
+				return 11u;
+			}
+		}
+		else
+		{
+			return 0u;
+		}
+
+	case Format::R4G4B4A4_UNORM_PACK16:
+	case Format::B4G4R4A4_UNORM_PACK16:
+		return 4u;
+
+	case Format::R5G5B5A1_UNORM_PACK16:
+	case Format::B5G5R5A1_UNORM_PACK16:
+		if (_channelIndex < 3)
+		{
+			return 5u;
+		}
+		else
+		{
+			return 1u;
+		}
+
+	case Format::A1R5G5B5_UNORM_PACK16:
+		if (_channelIndex > 0)
+		{
+			return 5u;
+		}
+		else
+		{
+			return 1u;
+		}
+
+	case Format::A2R10G10B10_UNORM_PACK32:
+	case Format::A2R10G10B10_SNORM_PACK32:
+
+	case Format::A2R10G10B10_UINT_PACK32:
+	case Format::A2R10G10B10_SINT_PACK32:
+	case Format::A2B10G10R10_UNORM_PACK32:
+	case Format::A2B10G10R10_SNORM_PACK32:
+
+	case Format::A2B10G10R10_UINT_PACK32:
+	case Format::A2B10G10R10_SINT_PACK32:
+		if (_channelIndex > 0)
+		{
+			return 10u;
+		}
+		else
+		{
+			return 2u;
+		}
 	}
 
 	return 0u;
@@ -437,6 +574,8 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 			return -1;
 		}
 
+	case Format::R4G4_UNORM_PACK8:
+
 	case Format::R8G8_UNORM:
 	case Format::R8G8_SNORM:
 	case Format::R8G8_UINT:
@@ -464,6 +603,8 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 		{
 			return -1;
 		}
+
+	case Format::R5G6B5_UNORM_PACK16:
 
 	case Format::R8G8B8_UNORM:
 	case Format::R8G8B8_SNORM:
@@ -493,6 +634,9 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 			return -1;
 		}
 
+	case Format::R4G4B4A4_UNORM_PACK16:
+	case Format::R5G5B5A1_UNORM_PACK16:
+
 	case Format::R8G8B8A8_UNORM:
 	case Format::R8G8B8A8_SNORM:
 	case Format::R8G8B8A8_UINT:
@@ -513,6 +657,9 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 	case Format::R64G64B64A64_SINT:
 	case Format::R64G64B64A64_SFLOAT:
 		return _channel;
+
+	case Format::B5G6R5_UNORM_PACK16:
+	case Format::B10G11R11_UFLOAT_PACK32:
 
 	case Format::B8G8R8_UNORM:
 	case Format::B8G8R8_SNORM:
@@ -539,6 +686,9 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 			return -1;
 		}
 
+	case Format::B4G4R4A4_UNORM_PACK16:
+	case Format::B5G5R5A1_UNORM_PACK16:
+
 	case Format::B8G8R8A8_UNORM:
 	case Format::B8G8R8A8_SNORM:
 	case Format::B8G8R8A8_UINT:
@@ -560,6 +710,52 @@ int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
 		{
 			return 3;
 		}
+
+	case Format::A1R5G5B5_UNORM_PACK16:
+
+	case Format::A2R10G10B10_UNORM_PACK32:
+	case Format::A2R10G10B10_SNORM_PACK32:
+
+	case Format::A2R10G10B10_UINT_PACK32:
+	case Format::A2R10G10B10_SINT_PACK32:
+		if (_channel == Channel::Red)
+		{
+			return 1;
+		}
+		if (_channel == Channel::Green)
+		{
+			return 2;
+		}
+		if (_channel == Channel::Blue)
+		{
+			return 3;
+		}
+		else
+		{
+			return 0;
+		}
+
+	case Format::A2B10G10R10_UNORM_PACK32:
+	case Format::A2B10G10R10_SNORM_PACK32:
+
+	case Format::A2B10G10R10_UINT_PACK32:
+	case Format::A2B10G10R10_SINT_PACK32:
+		if (_channel == Channel::Red)
+		{
+			return 3;
+		}
+		if (_channel == Channel::Green)
+		{
+			return 2;
+		}
+		if (_channel == Channel::Blue)
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
 	}
 
 	return -1;
@@ -570,6 +766,8 @@ bool SlimKTX2::isFloat(Format _vkFormat)
 
 	switch (_vkFormat)
 	{
+	case Format::B10G11R11_UFLOAT_PACK32:
+
 	case Format::R16_SFLOAT:
 
 	case Format::R16G16_SFLOAT:
@@ -603,7 +801,14 @@ bool SlimKTX2::isSigned(Format _vkFormat)
 {
 	switch (_vkFormat)
 	{
-		// 8 bits; does not depend on channel.
+	case Format::A2R10G10B10_SNORM_PACK32:
+
+	case Format::A2R10G10B10_SINT_PACK32:
+	case Format::A2B10G10R10_SNORM_PACK32:
+
+	case Format::A2B10G10R10_UINT_PACK32:
+	case Format::A2B10G10R10_SINT_PACK32:
+
 	case Format::R8_SNORM:
 	case Format::R8_SINT:
 	case Format::R8_SRGB:
@@ -678,6 +883,21 @@ bool SlimKTX2::isNormalized(Format _vkFormat)
 
 	switch (_vkFormat)
 	{
+	case Format::R4G4_UNORM_PACK8:
+	case Format::R4G4B4A4_UNORM_PACK16:
+	case Format::B4G4R4A4_UNORM_PACK16:
+	case Format::R5G6B5_UNORM_PACK16:
+	case Format::B5G6R5_UNORM_PACK16:
+	case Format::R5G5B5A1_UNORM_PACK16:
+	case Format::B5G5R5A1_UNORM_PACK16:
+	case Format::A1R5G5B5_UNORM_PACK16:
+
+	case Format::A2R10G10B10_UNORM_PACK32:
+	case Format::A2R10G10B10_SNORM_PACK32:
+
+	case Format::A2B10G10R10_UNORM_PACK32:
+	case Format::A2B10G10R10_SNORM_PACK32:
+
 	case Format::R8_UNORM:
 	case Format::R8_SNORM:
 
@@ -731,6 +951,32 @@ bool SlimKTX2::isSrgb(Format _vkFormat)
 
 bool SlimKTX2::isPacked(Format _vkFormat)
 {
+	switch (_vkFormat)
+	{
+	case Format::R4G4_UNORM_PACK8:
+	case Format::R4G4B4A4_UNORM_PACK16:
+	case Format::B4G4R4A4_UNORM_PACK16:
+	case Format::R5G6B5_UNORM_PACK16:
+	case Format::B5G6R5_UNORM_PACK16:
+	case Format::R5G5B5A1_UNORM_PACK16:
+	case Format::B5G5R5A1_UNORM_PACK16:
+	case Format::A1R5G5B5_UNORM_PACK16:
+
+	case Format::A2R10G10B10_UNORM_PACK32:
+	case Format::A2R10G10B10_SNORM_PACK32:
+
+	case Format::A2R10G10B10_UINT_PACK32:
+	case Format::A2R10G10B10_SINT_PACK32:
+	case Format::A2B10G10R10_UNORM_PACK32:
+	case Format::A2B10G10R10_SNORM_PACK32:
+
+	case Format::A2B10G10R10_UINT_PACK32:
+	case Format::A2B10G10R10_SINT_PACK32:
+
+	case Format::B10G11R11_UFLOAT_PACK32:
+		return true;
+	}
+
 	return false;
 }
 
