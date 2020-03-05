@@ -1,4 +1,4 @@
-// Copyright (c) 2019 UX3D GmbH. All rights reserved.
+// Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #pragma once
 
@@ -8,326 +8,326 @@ namespace ux3d
 {
 	namespace slimktx2
 	{
-		enum class VendorId
+		enum VendorId : uint32_t // 17 bit
 		{
-			Khronos = 0U,
-			Max = 0x1FFFFU
+			VendorId_KHRONOS = 0U,
+			VendorId_MAX = 0x1FFFFU
 		};
 
-		enum class DescriptorType
+		enum DescriptorType : uint16_t // 15 bit
 		{
-			BasicFormat = 0U,
-			AdditionalPlanes = 0x6001U,
-			AdditionalDimensions = 0x6002U,
-			NeededForWriteBit = 0x2000U,
-			NeededForReadBit = 0x4000U,
-			Max = 0x7FFFU
+			DescriptorType_BASICFORMAT = 0U,
+			DescriptorType_ADDITIONAL_PLANES = 0x6001U,
+			DescriptorType_ADDITIONAL_DIMENSIONS = 0x6002U,
+			DescriptorType_NEEDED_FOR_WRITE_BIT = 0x2000U,
+			DescriptorType_NEEDED_FOR_DECODE_BIT = 0x4000U,
+			DescriptorType_MAX = 0x7FFFU
 		};
 
-		enum class VersionNumber
+		enum VersionNumber : uint16_t // 16 bit
 		{
-			Version_1_0 = 0U,
-			Version_1_1 = 0U,
-			Version_1_2 = 1U,
-			Version_1_3 = 2U,
-			Version_Lastest = Version_1_3,
-			Version_Max = 0xFFFFU
+			VersionNumber_1_0 = 0U,
+			VersionNumber_1_1 = 0U,
+			VersionNumber_1_2 = 1U,
+			VersionNumber_1_3 = 2U,
+			VersionNumber_LATEST = VersionNumber_1_3,
+			VersionNumber_MAX = 0xFFFFU
 		};
 
-		enum class ColorModel
+		enum ColorModel : uint8_t
 		{
-            UNSPECIFIED = 0U,
+            ColorModel_UNSPECIFIED = 0U,
 
-			RGBSDA = 1U,
-			YUVSDA = 2U,
-			YIQSDA = 3U,
-			LABSDA = 4U,
-			CMYKA = 5U,
-			XYZW = 6U,
-			HSVA_ANG = 7U,
-			HSLA_ANG = 8U,
-			HSVA_HEX = 9U,
-			HSLA_HEX = 10U,
-			YCGCOA = 11U,
-			YCCBCCRC = 12U,
-			ICTCP = 13U,
-			CIEXYZ = 14U,
-			CIEXYY = 15U,
+			ColorModel_RGBSDA = 1U,
+			ColorModel_YUVSDA = 2U,
+			ColorModel_YIQSDA = 3U,
+			ColorModel_LABSDA = 4U,
+			ColorModel_CMYKA = 5U,
+			ColorModel_XYZW = 6U,
+			ColorModel_HSVA_ANG = 7U,
+			ColorModel_HSLA_ANG = 8U,
+			ColorModel_HSVA_HEX = 9U,
+			ColorModel_HSLA_HEX = 10U,
+			ColorModel_YCGCOA = 11U,
+			ColorModel_YCCBCCRC = 12U,
+			ColorModel_ICTCP = 13U,
+			ColorModel_CIEXYZ = 14U,
+			ColorModel_CIEXYY = 15U,
 
-			DXT1A = 128U,
-			BC1A = 128U,
-			DXT2 = 129U,
-			DXT3 = 129U,
-			BC2 = 129U,
-			DXT4 = 130U,
-			DXT5 = 130U,
-			BC3 = 130U,
-			BC4 = 131U,
-			BC5 = 132U,
-			BC6H = 133U,
-			BC7 = 134U,
+			ColorModel_DXT1A = 128U,
+			ColorModel_BC1A = 128U,
+			ColorModel_DXT2 = 129U,
+			ColorModel_DXT3 = 129U,
+			ColorModel_BC2 = 129U,
+			ColorModel_DXT4 = 130U,
+			ColorModel_DXT5 = 130U,
+			ColorModel_BC3 = 130U,
+			ColorModel_BC4 = 131U,
+			ColorModel_BC5 = 132U,
+			ColorModel_BC6H = 133U,
+			ColorModel_BC7 = 134U,
 
-			ETC1 = 160U,
+            ColorModel_ETC1 = 160U,
 
-			ETC2 = 161U,
-			ASTC = 162U,
-			ETC1S = 163U,
-			PVRTC = 164U,
-			PVRTC2 = 165U,
-			MAX = 0xFFU
+			ColorModel_ETC2 = 161U,
+			ColorModel_ASTC = 162U,
+			ColorModel_ETC1S = 163U,
+			ColorModel_PVRTC = 164U,
+			ColorModel_PVRTC2 = 165U,
+			ColorModel_MAX = 0xFFU
 		};
 
-        enum class ColorChannels
+        enum ColorChannels : uint8_t
         {
-            UNSPECIFIED_0 = 0U,
-            UNSPECIFIED_1 = 1U,
-            UNSPECIFIED_2 = 2U,
-            UNSPECIFIED_3 = 3U,
-            UNSPECIFIED_4 = 4U,
-            UNSPECIFIED_5 = 5U,
-            UNSPECIFIED_6 = 6U,
-            UNSPECIFIED_7 = 7U,
-            UNSPECIFIED_8 = 8U,
-            UNSPECIFIED_9 = 9U,
-            UNSPECIFIED_10 = 10U,
-            UNSPECIFIED_11 = 11U,
-            UNSPECIFIED_12 = 12U,
-            UNSPECIFIED_13 = 13U,
-            UNSPECIFIED_14 = 14U,
-            UNSPECIFIED_15 = 15U,
+            ColorChannels_UNSPECIFIED_0 = 0U,
+            ColorChannels_UNSPECIFIED_1 = 1U,
+            ColorChannels_UNSPECIFIED_2 = 2U,
+            ColorChannels_UNSPECIFIED_3 = 3U,
+            ColorChannels_UNSPECIFIED_4 = 4U,
+            ColorChannels_UNSPECIFIED_5 = 5U,
+            ColorChannels_UNSPECIFIED_6 = 6U,
+            ColorChannels_UNSPECIFIED_7 = 7U,
+            ColorChannels_UNSPECIFIED_8 = 8U,
+            ColorChannels_UNSPECIFIED_9 = 9U,
+            ColorChannels_UNSPECIFIED_10 = 10U,
+            ColorChannels_UNSPECIFIED_11 = 11U,
+            ColorChannels_UNSPECIFIED_12 = 12U,
+            ColorChannels_UNSPECIFIED_13 = 13U,
+            ColorChannels_UNSPECIFIED_14 = 14U,
+            ColorChannels_UNSPECIFIED_15 = 15U,
 
-            RGBSDA_RED = 0U,
-            RGBSDA_R = 0U,
-            RGBSDA_GREEN = 1U,
-            RGBSDA_G = 1U,
-            RGBSDA_BLUE = 2U,
-            RGBSDA_B = 2U,
-            RGBSDA_STENCIL = 13U,
-            RGBSDA_S = 13U,
-            RGBSDA_DEPTH = 14U,
-            RGBSDA_D = 14U,
-            RGBSDA_ALPHA = 15U,
-            RGBSDA_A = 15U,
+            ColorChannels_RGBSDA_RED = 0U,
+            ColorChannels_RGBSDA_R = 0U,
+            ColorChannels_RGBSDA_GREEN = 1U,
+            ColorChannels_RGBSDA_G = 1U,
+            ColorChannels_RGBSDA_BLUE = 2U,
+            ColorChannels_RGBSDA_B = 2U,
+            ColorChannels_RGBSDA_STENCIL = 13U,
+            ColorChannels_RGBSDA_S = 13U,
+            ColorChannels_RGBSDA_DEPTH = 14U,
+            ColorChannels_RGBSDA_D = 14U,
+            ColorChannels_RGBSDA_ALPHA = 15U,
+            ColorChannels_RGBSDA_A = 15U,
 
-            YUVSDA_Y = 0U,
-            YUVSDA_CB = 1U,
-            YUVSDA_U = 1U,
-            YUVSDA_CR = 2U,
-            YUVSDA_V = 2U,
-            YUVSDA_STENCIL = 13U,
-            YUVSDA_S = 13U,
-            YUVSDA_DEPTH = 14U,
-            YUVSDA_D = 14U,
-            YUVSDA_ALPHA = 15U,
-            YUVSDA_A = 15U,
+            ColorChannels_YUVSDA_Y = 0U,
+            ColorChannels_YUVSDA_CB = 1U,
+            ColorChannels_YUVSDA_U = 1U,
+            ColorChannels_YUVSDA_CR = 2U,
+            ColorChannels_YUVSDA_V = 2U,
+            ColorChannels_YUVSDA_STENCIL = 13U,
+            ColorChannels_YUVSDA_S = 13U,
+            ColorChannels_YUVSDA_DEPTH = 14U,
+            ColorChannels_YUVSDA_D = 14U,
+            ColorChannels_YUVSDA_ALPHA = 15U,
+            ColorChannels_YUVSDA_A = 15U,
 
-            YIQSDA_Y = 0U,
-            YIQSDA_I = 1U,
-            YIQSDA_Q = 2U,
-            YIQSDA_STENCIL = 13U,
-            YIQSDA_S = 13U,
-            YIQSDA_DEPTH = 14U,
-            YIQSDA_D = 14U,
-            YIQSDA_ALPHA = 15U,
-            YIQSDA_A = 15U,
+            ColorChannels_YIQSDA_Y = 0U,
+            ColorChannels_YIQSDA_I = 1U,
+            ColorChannels_YIQSDA_Q = 2U,
+            ColorChannels_YIQSDA_STENCIL = 13U,
+            ColorChannels_YIQSDA_S = 13U,
+            ColorChannels_YIQSDA_DEPTH = 14U,
+            ColorChannels_YIQSDA_D = 14U,
+            ColorChannels_YIQSDA_ALPHA = 15U,
+            ColorChannels_YIQSDA_A = 15U,
 
-            LABSDA_L = 0U,
-            LABSDA_A = 1U,
-            LABSDA_B = 2U,
-            LABSDA_STENCIL = 13U,
-            LABSDA_S = 13U,
-            LABSDA_DEPTH = 14U,
-            LABSDA_D = 14U,
-            LABSDA_ALPHA = 15U,
+            ColorChannels_LABSDA_L = 0U,
+            ColorChannels_LABSDA_A = 1U,
+            ColorChannels_LABSDA_B = 2U,
+            ColorChannels_LABSDA_STENCIL = 13U,
+            ColorChannels_LABSDA_S = 13U,
+            ColorChannels_LABSDA_DEPTH = 14U,
+            ColorChannels_LABSDA_D = 14U,
+            ColorChannels_LABSDA_ALPHA = 15U,
 
-            CMYKSDA_CYAN = 0U,
-            CMYKSDA_C = 0U,
-            CMYKSDA_MAGENTA = 1U,
-            CMYKSDA_M = 1U,
-            CMYKSDA_YELLOW = 2U,
-            CMYKSDA_Y = 2U,
-            CMYKSDA_KEY = 3U,
-            CMYKSDA_BLACK = 3U,
-            CMYKSDA_K = 3U,
-            CMYKSDA_ALPHA = 15U,
-            CMYKSDA_A = 15U,
+            ColorChannels_CMYKSDA_CYAN = 0U,
+            ColorChannels_CMYKSDA_C = 0U,
+            ColorChannels_CMYKSDA_MAGENTA = 1U,
+            ColorChannels_CMYKSDA_M = 1U,
+            ColorChannels_CMYKSDA_YELLOW = 2U,
+            ColorChannels_CMYKSDA_Y = 2U,
+            ColorChannels_CMYKSDA_KEY = 3U,
+            ColorChannels_CMYKSDA_BLACK = 3U,
+            ColorChannels_CMYKSDA_K = 3U,
+            ColorChannels_CMYKSDA_ALPHA = 15U,
+            ColorChannels_CMYKSDA_A = 15U,
 
-            XYZW_X = 0U,
-            XYZW_Y = 1U,
-            XYZW_Z = 2U,
-            XYZW_W = 3U,
+            ColorChannels_XYZW_X = 0U,
+            ColorChannels_XYZW_Y = 1U,
+            ColorChannels_XYZW_Z = 2U,
+            ColorChannels_XYZW_W = 3U,
 
-            HSVA_ANG_VALUE = 0U,
-            HSVA_ANG_V = 0U,
-            HSVA_ANG_SATURATION = 1U,
-            HSVA_ANG_S = 1U,
-            HSVA_ANG_HUE = 2U,
-            HSVA_ANG_H = 2U,
-            HSVA_ANG_ALPHA = 15U,
-            HSVA_ANG_A = 15U,
+            ColorChannels_HSVA_ANG_VALUE = 0U,
+            ColorChannels_HSVA_ANG_V = 0U,
+            ColorChannels_HSVA_ANG_SATURATION = 1U,
+            ColorChannels_HSVA_ANG_S = 1U,
+            ColorChannels_HSVA_ANG_HUE = 2U,
+            ColorChannels_HSVA_ANG_H = 2U,
+            ColorChannels_HSVA_ANG_ALPHA = 15U,
+            ColorChannels_HSVA_ANG_A = 15U,
 
-            HSLA_ANG_LIGHTNESS = 0U,
-            HSLA_ANG_L = 0U,
-            HSLA_ANG_SATURATION = 1U,
-            HSLA_ANG_S = 1U,
-            HSLA_ANG_HUE = 2U,
-            HSLA_ANG_H = 2U,
-            HSLA_ANG_ALPHA = 15U,
-            HSLA_ANG_A = 15U,
+            ColorChannels_HSLA_ANG_LIGHTNESS = 0U,
+            ColorChannels_HSLA_ANG_L = 0U,
+            ColorChannels_HSLA_ANG_SATURATION = 1U,
+            ColorChannels_HSLA_ANG_S = 1U,
+            ColorChannels_HSLA_ANG_HUE = 2U,
+            ColorChannels_HSLA_ANG_H = 2U,
+            ColorChannels_HSLA_ANG_ALPHA = 15U,
+            ColorChannels_HSLA_ANG_A = 15U,
 
-            HSVA_HEX_VALUE = 0U,
-            HSVA_HEX_V = 0U,
-            HSVA_HEX_SATURATION = 1U,
-            HSVA_HEX_S = 1U,
-            HSVA_HEX_HUE = 2U,
-            HSVA_HEX_H = 2U,
-            HSVA_HEX_ALPHA = 15U,
-            HSVA_HEX_A = 15U,
+            ColorChannels_HSVA_HEX_VALUE = 0U,
+            ColorChannels_HSVA_HEX_V = 0U,
+            ColorChannels_HSVA_HEX_SATURATION = 1U,
+            ColorChannels_HSVA_HEX_S = 1U,
+            ColorChannels_HSVA_HEX_HUE = 2U,
+            ColorChannels_HSVA_HEX_H = 2U,
+            ColorChannels_HSVA_HEX_ALPHA = 15U,
+            ColorChannels_HSVA_HEX_A = 15U,
 
-            HSLA_HEX_LIGHTNESS = 0U,
-            HSLA_HEX_L = 0U,
-            HSLA_HEX_SATURATION = 1U,
-            HSLA_HEX_S = 1U,
-            HSLA_HEX_HUE = 2U,
-            HSLA_HEX_H = 2U,
-            HSLA_HEX_ALPHA = 15U,
-            HSLA_HEX_A = 15U,
+            ColorChannels_HSLA_HEX_LIGHTNESS = 0U,
+            ColorChannels_HSLA_HEX_L = 0U,
+            ColorChannels_HSLA_HEX_SATURATION = 1U,
+            ColorChannels_HSLA_HEX_S = 1U,
+            ColorChannels_HSLA_HEX_HUE = 2U,
+            ColorChannels_HSLA_HEX_H = 2U,
+            ColorChannels_HSLA_HEX_ALPHA = 15U,
+            ColorChannels_HSLA_HEX_A = 15U,
 
-            YCGCOA_Y = 0U,
-            YCGCOA_CG = 1U,
-            YCGCOA_CO = 2U,
-            YCGCOA_ALPHA = 15U,
-            YCGCOA_A = 15U,
+            ColorChannels_YCGCOA_Y = 0U,
+            ColorChannels_YCGCOA_CG = 1U,
+            ColorChannels_YCGCOA_CO = 2U,
+            ColorChannels_YCGCOA_ALPHA = 15U,
+            ColorChannels_YCGCOA_A = 15U,
 
-            CIEXYZ_X = 0U,
-            CIEXYZ_Y = 1U,
-            CIEXYZ_Z = 2U,
+            ColorChannels_CIEXYZ_X = 0U,
+            ColorChannels_CIEXYZ_Y = 1U,
+            ColorChannels_CIEXYZ_Z = 2U,
 
-            CIEXYY_X = 0U,
-            CIEXYY_YCHROMA = 1U,
-            CIEXYY_YLUMA = 2U,
+            ColorChannels_CIEXYY_X = 0U,
+            ColorChannels_CIEXYY_YCHROMA = 1U,
+            ColorChannels_CIEXYY_YLUMA = 2U,
 
-            DXT1A_COLOR = 0U,
-            BC1A_COLOR = 0U,
-            DXT1A_ALPHAPRESENT = 1U,
-            DXT1A_ALPHA = 1U,
-            BC1A_ALPHAPRESENT = 1U,
-            BC1A_ALPHA = 1U,
+            ColorChannels_DXT1A_COLOR = 0U,
+            ColorChannels_BC1A_COLOR = 0U,
+            ColorChannels_DXT1A_ALPHAPRESENT = 1U,
+            ColorChannels_DXT1A_ALPHA = 1U,
+            ColorChannels_BC1A_ALPHAPRESENT = 1U,
+            ColorChannels_BC1A_ALPHA = 1U,
 
-            DXT2_COLOR = 0U,
-            DXT3_COLOR = 0U,
-            BC2_COLOR = 0U,
-            DXT2_ALPHA = 15U,
-            DXT3_ALPHA = 15U,
-            BC2_ALPHA = 15U,
+            ColorChannels_DXT2_COLOR = 0U,
+            ColorChannels_DXT3_COLOR = 0U,
+            ColorChannels_BC2_COLOR = 0U,
+            ColorChannels_DXT2_ALPHA = 15U,
+            ColorChannels_DXT3_ALPHA = 15U,
+            ColorChannels_BC2_ALPHA = 15U,
 
-            DXT4_COLOR = 0U,
-            DXT5_COLOR = 0U,
-            BC3_COLOR = 0U,
-            DXT4_ALPHA = 15U,
-            DXT5_ALPHA = 15U,
-            BC3_ALPHA = 15U,
+            ColorChannels_DXT4_COLOR = 0U,
+            ColorChannels_DXT5_COLOR = 0U,
+            ColorChannels_BC3_COLOR = 0U,
+            ColorChannels_DXT4_ALPHA = 15U,
+            ColorChannels_DXT5_ALPHA = 15U,
+            ColorChannels_BC3_ALPHA = 15U,
 
-            BC4_DATA = 0U,
+            ColorChannels_BC4_DATA = 0U,
 
-            BC5_RED = 0U,
-            BC5_R = 0U,
-            BC5_GREEN = 1U,
-            BC5_G = 1U,
+            ColorChannels_BC5_RED = 0U,
+            ColorChannels_BC5_R = 0U,
+            ColorChannels_BC5_GREEN = 1U,
+            ColorChannels_BC5_G = 1U,
 
-            BC6H_COLOR = 0U,
-            BC6H_DATA = 0U,
+            ColorChannels_BC6H_COLOR = 0U,
+            ColorChannels_BC6H_DATA = 0U,
 
-            BC7_DATA = 0U,
-            BC7_COLOR = 0U,
+            ColorChannels_BC7_DATA = 0U,
+            ColorChannels_BC7_COLOR = 0U,
 
-            ETC1_DATA = 0U,
-            ETC1_COLOR = 0U,
+            ColorChannels_ETC1_DATA = 0U,
+            ColorChannels_ETC1_COLOR = 0U,
 
-            ETC2_RED = 0U,
-            ETC2_R = 0U,
-            ETC2_GREEN = 1U,
-            ETC2_G = 1U,
-            ETC2_COLOR = 2U,
-            ETC2_ALPHA = 15U,
-            ETC2_A = 15U,
+            ColorChannels_ETC2_RED = 0U,
+            ColorChannels_ETC2_R = 0U,
+            ColorChannels_ETC2_GREEN = 1U,
+            ColorChannels_ETC2_G = 1U,
+            ColorChannels_ETC2_COLOR = 2U,
+            ColorChannels_ETC2_ALPHA = 15U,
+            ColorChannels_ETC2_A = 15U,
 
-            ASTC_DATA = 0U,
+            ColorChannels_ASTC_DATA = 0U,
 
-            ETC1S_DATA = 0U,
-            ETC1S_COLOR = 0U,
+            ColorChannels_ETC1S_DATA = 0U,
+            ColorChannels_ETC1S_COLOR = 0U,
 
-            PVRTC_DATA = 0U,
-            PVRTC_COLOR = 0U,
+            ColorChannels_PVRTC_DATA = 0U,
+            ColorChannels_PVRTC_COLOR = 0U,
 
-            PVRTC2_DATA = 0U,
-            PVRTC2_COLOR = 0U,
+            ColorChannels_PVRTC2_DATA = 0U,
+            ColorChannels_PVRTC2_COLOR = 0U,
 
-            COMMON_LUMA = 0U,
-            COMMON_L = 0U,
-            COMMON_STENCIL = 13U,
-            COMMON_S = 13U,
-            COMMON_DEPTH = 14U,
-            COMMON_D = 14U,
-            COMMON_ALPHA = 15U,
-            COMMON_A = 15U
+            ColorChannels_COMMON_LUMA = 0U,
+            ColorChannels_COMMON_L = 0U,
+            ColorChannels_COMMON_STENCIL = 13U,
+            ColorChannels_COMMON_S = 13U,
+            ColorChannels_COMMON_DEPTH = 14U,
+            ColorChannels_COMMON_D = 14U,
+            ColorChannels_COMMON_ALPHA = 15U,
+            ColorChannels_COMMON_A = 15U
         };
 
-        enum class ColorPrimaries
+        enum ColorPrimaries : uint8_t
         {
-            UNSPECIFIED = 0U,
-            BT709 = 1U,
-            SRGB = 1U,
-            BT601_EBU = 2U,
-            BT601_SMPTE = 3U,
-            BT2020 = 4U,
-            CIEXYZ = 5U,
-            ACES = 6U,
-            ACESCC = 7U,
-            NTSC1953 = 8U,
-            PAL525 = 9U,
-            DISPLAYP3 = 10U,
-            ADOBERGB = 11U,
-            MAX = 0xFFU
+            ColorPrimaries_UNSPECIFIED = 0U,
+            ColorPrimaries_BT709 = 1U,
+            ColorPrimaries_SRGB = 1U,
+            ColorPrimaries_BT601_EBU = 2U,
+            ColorPrimaries_BT601_SMPTE = 3U,
+            ColorPrimaries_BT2020 = 4U,
+            ColorPrimaries_CIEXYZ = 5U,
+            ColorPrimaries_ACES = 6U,
+            ColorPrimaries_ACESCC = 7U,
+            ColorPrimaries_NTSC1953 = 8U,
+            ColorPrimaries_PAL525 = 9U,
+            ColorPrimaries_DISPLAYP3 = 10U,
+            ColorPrimaries_ADOBERGB = 11U,
+            ColorPrimaries_MAX = 0xFFU
         };
 
-        enum class TransferFunction
+        enum TransferFunction : uint8_t
         {
-            UNSPECIFIED = 0U,
-            LINEAR = 1U,
-            SRGB = 2U,
-            ITU = 3U,
-            SMTPE170M = 3U,
-            NTSC = 4U,
-            SLOG = 5U,
-            SLOG2 = 6U,
-            BT1886 = 7U,
-            HLG_OETF = 8U,
-            HLG_EOTF = 9U,
-            PQ_EOTF = 10U,
-            PQ_OETF = 11U,
-            DCIP3 = 12U,
-            PAL_OETF = 13U,
-            PAL625_EOTF = 14U,
-            ST240 = 15U,
-            ACESCC = 16U,
-            ACESCCT = 17U,
-            ADOBERGB = 18U,
-            MAX = 0xFFU
+            TransferFunction_UNSPECIFIED = 0U,
+            TransferFunction_LINEAR = 1U,
+            TransferFunction_SRGB = 2U,
+            TransferFunction_ITU = 3U,
+            TransferFunction_SMTPE170M = 3U,
+            TransferFunction_NTSC = 4U,
+            TransferFunction_SLOG = 5U,
+            TransferFunction_SLOG2 = 6U,
+            TransferFunction_BT1886 = 7U,
+            TransferFunction_HLG_OETF = 8U,
+            TransferFunction_HLG_EOTF = 9U,
+            TransferFunction_PQ_EOTF = 10U,
+            TransferFunction_PQ_OETF = 11U,
+            TransferFunction_DCIP3 = 12U,
+            TransferFunction_PAL_OETF = 13U,
+            TransferFunction_PAL625_EOTF = 14U,
+            TransferFunction_ST240 = 15U,
+            TransferFunction_ACESCC = 16U,
+            TransferFunction_ACESCCT = 17U,
+            TransferFunction_ADOBERGB = 18U,
+            TransferFunction_MAX = 0xFFU
         };
 
-        enum class AlphaFlags
+        enum AlphaFlags : uint8_t
         {
-            STRAIGHT = 0U,
-            PREMULTIPLIED = 1U
+            AlphaFlags_STRAIGHT = 0U,
+            AlphaFlags_PREMULTIPLIED = 1U
         };
 
-        enum class SampleDataTypeQualifiers
+        enum SampleDataTypeQualifiers : uint8_t
         {
-            LINEAR = 1U << 4U,
-            EXPONENT = 1U << 5U,
-            SIGNED = 1U << 6U,
-            FLOAT = 1U << 7U
+            SampleDataTypeQualifiers_LINEAR = 1U << 4U,
+            SampleDataTypeQualifiers_EXPONENT = 1U << 5U,
+            SampleDataTypeQualifiers_SIGNED = 1U << 6U,
+            SampleDataTypeQualifiers_FLOAT = 1U << 7U
         };
 
 		struct DataFormatDesc
@@ -345,26 +345,26 @@ namespace ux3d
 				uint32_t blockSize : 16; // = 24 + 16 x #samples
 
 				uint32_t : 0; // start new word
-				uint32_t colorModel : 4;
-				uint32_t colorPrimaries : 4;
-				uint32_t transferFunction : 4;
-				uint32_t flags : 4;
+				uint32_t colorModel : 8;
+				uint32_t colorPrimaries : 8;
+				uint32_t transferFunction : 8;
+				uint32_t flags : 8;
 
 				uint32_t : 0; // start new word
-				uint32_t texelBlockDimension0 : 4;
-				uint32_t texelBlockDimension1 : 4;
-				uint32_t texelBlockDimension2 : 4;
-				uint32_t texelBlockDimension3 : 4;
+				uint32_t texelBlockDimension0 : 8;
+				uint32_t texelBlockDimension1 : 8;
+				uint32_t texelBlockDimension2 : 8;
+				uint32_t texelBlockDimension3 : 8;
 
 				uint64_t : 0; // start new word
-				uint64_t bytesPlane0 : 4;
-				uint64_t bytesPlane1 : 4;
-				uint64_t bytesPlane2 : 4;
-				uint64_t bytesPlane3 : 4;
-				uint64_t bytesPlane4 : 4;
-				uint64_t bytesPlane5 : 4;
-				uint64_t bytesPlane6 : 4;
-				uint64_t bytesPlane7 : 4;
+				uint64_t bytesPlane0 : 8;
+				uint64_t bytesPlane1 : 8;
+				uint64_t bytesPlane2 : 8;
+				uint64_t bytesPlane3 : 8;
+				uint64_t bytesPlane4 : 8;
+				uint64_t bytesPlane5 : 8;
+				uint64_t bytesPlane6 : 8;
+				uint64_t bytesPlane7 : 8;
 
 				BlockHeader();
 			};
