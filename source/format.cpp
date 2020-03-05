@@ -518,7 +518,7 @@ int32_t ux3d::slimktx2::getChannelIndex(ux3d::slimktx2::Format _vkFormat, ux3d::
 	case Format::R64_UINT:
 	case Format::R64_SINT:
 	case Format::R64_SFLOAT:
-		if (_channel <= Channel::Red)
+		if (_channel <= Channel_Red)
 		{
 			return _channel;
 		}
@@ -548,7 +548,7 @@ int32_t ux3d::slimktx2::getChannelIndex(ux3d::slimktx2::Format _vkFormat, ux3d::
 	case Format::R64G64_UINT:
 	case Format::R64G64_SINT:
 	case Format::R64G64_SFLOAT:
-		if (_channel <= Channel::Green)
+		if (_channel <= Channel_Green)
 		{
 			return _channel;
 		}
@@ -578,7 +578,7 @@ int32_t ux3d::slimktx2::getChannelIndex(ux3d::slimktx2::Format _vkFormat, ux3d::
 	case Format::R64G64B64_UINT:
 	case Format::R64G64B64_SINT:
 	case Format::R64G64B64_SFLOAT:
-		if (_channel <= Channel::Blue)
+		if (_channel <= Channel_Blue)
 		{
 			return _channel;
 		}
@@ -619,13 +619,13 @@ int32_t ux3d::slimktx2::getChannelIndex(ux3d::slimktx2::Format _vkFormat, ux3d::
 	case Format::B8G8R8_UINT:
 	case Format::B8G8R8_SINT:
 	case Format::B8G8R8_SRGB:
-		if (_channel <= Channel::Blue)
+		if (_channel <= Channel_Blue)
 		{
-			if (_channel == Channel::Red)
+			if (_channel == Channel_Red)
 			{
 				return 2;
 			}
-			if (_channel == Channel::Green)
+			if (_channel == Channel_Green)
 			{
 				return 1;
 			}
@@ -647,15 +647,15 @@ int32_t ux3d::slimktx2::getChannelIndex(ux3d::slimktx2::Format _vkFormat, ux3d::
 	case Format::B8G8R8A8_UINT:
 	case Format::B8G8R8A8_SINT:
 	case Format::B8G8R8A8_SRGB:
-		if (_channel == Channel::Red)
+		if (_channel == Channel_Red)
 		{
 			return 2;
 		}
-		if (_channel == Channel::Green)
+		if (_channel == Channel_Green)
 		{
 			return 1;
 		}
-		if (_channel == Channel::Blue)
+		if (_channel == Channel_Blue)
 		{
 			return 0;
 		}
@@ -671,15 +671,15 @@ int32_t ux3d::slimktx2::getChannelIndex(ux3d::slimktx2::Format _vkFormat, ux3d::
 
 	case Format::A2R10G10B10_UINT_PACK32:
 	case Format::A2R10G10B10_SINT_PACK32:
-		if (_channel == Channel::Red)
+		if (_channel == Channel_Red)
 		{
 			return 1;
 		}
-		if (_channel == Channel::Green)
+		if (_channel == Channel_Green)
 		{
 			return 2;
 		}
-		if (_channel == Channel::Blue)
+		if (_channel == Channel_Blue)
 		{
 			return 3;
 		}
@@ -693,15 +693,15 @@ int32_t ux3d::slimktx2::getChannelIndex(ux3d::slimktx2::Format _vkFormat, ux3d::
 
 	case Format::A2B10G10R10_UINT_PACK32:
 	case Format::A2B10G10R10_SINT_PACK32:
-		if (_channel == Channel::Red)
+		if (_channel == Channel_Red)
 		{
 			return 3;
 		}
-		if (_channel == Channel::Green)
+		if (_channel == Channel_Green)
 		{
 			return 2;
 		}
-		if (_channel == Channel::Blue)
+		if (_channel == Channel_Blue)
 		{
 			return 1;
 		}

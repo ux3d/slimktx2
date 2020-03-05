@@ -8,12 +8,12 @@ namespace ux3d
 {
 	namespace slimktx2
 	{
-		enum Channel
+		enum Channel : uint32_t
 		{
-			Red = 0,
-			Green,
-			Blue,
-			Alpha
+			Channel_Red = 0,
+			Channel_Green,
+			Channel_Blue,
+			Channel_Alpha
 		};
 
 		// TODO: rename to PixelFormat

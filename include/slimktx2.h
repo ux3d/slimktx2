@@ -13,7 +13,7 @@ namespace ux3d
 	namespace slimktx2
 	{
 		// dont use enum class to allow converssion to uint32_t
-		enum CubeMapFace : uint32_t
+		enum class CubeMapFace : uint32_t
 		{
 			Right = 0,
 			Left,
