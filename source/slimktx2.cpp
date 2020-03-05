@@ -148,16 +148,19 @@ Result SlimKTX2::serialize(IOHandle _file)
 {
 	if (m_pLevels == nullptr)
 	{
+		log("LevelIndex not specified\n");
 		return Result::LevelIndexNotAllocated;
 	}
 
 	if (m_pMipLevelArray == nullptr)
 	{
-		return Result::ContainerNotAllocated;
+		log("MipLevelArray not specified\n");
+		return Result::MipLevelArryNotAllocated;
 	}
 
 	if (m_dfd.pBlocks == nullptr)
 	{
+		log("DFD not specified\n");
 		return Result::DataFormatDescNotAllocated;
 	}
 
@@ -167,7 +170,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 	const uint32_t levelCount = getLevelCount();
 
-	const uint32_t dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
+	const uint32_t dfdByteLength = m_dfd.computeSize();
 	const uint32_t dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
 	const uint32_t kvdByteLength = 0u; // TODO compute
 	const uint32_t kvdByteOffset = dfdByteOffset + dfdByteLength;
@@ -190,7 +193,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 
 		// start with the small level, fill them in reverse
 		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
-		levelSize *= m_header.faceCount;
+		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
 
 		// absolute levelOffset within the file
@@ -332,11 +335,32 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	const uint32_t levelCount = getLevelCount();
 	m_pLevels = allocateArray<LevelIndex>(levelCount);
 
-	// TODO: fill with meaningful data
-	m_dfd.pBlocks = allocateArray<DataFormatDesc::Block>();
-	m_dfd.totalSize = m_dfd.computeSize();
-
 	return Result::Success;
+}
+
+void ux3d::slimktx2::SlimKTX2::addDFDBlock(const DataFormatDesc::BlockHeader& _header, const DataFormatDesc::Sample* _pSamples, uint32_t _numSamples)
+{
+	auto pBlock = m_dfd.getLastBlock();
+
+	if (pBlock == nullptr) // first block
+	{
+		pBlock = allocateArray<DataFormatDesc::Block>();
+		m_dfd.pBlocks = pBlock;
+	}
+	else
+	{
+		pBlock->pNext = allocateArray<DataFormatDesc::Block>();
+		pBlock = pBlock->pNext;
+	}
+
+	pBlock->header = _header;
+	pBlock->setSampleCount(_numSamples);
+
+	if (_pSamples != nullptr && _numSamples != 0u)
+	{
+		pBlock->pSamples = allocateArray<DataFormatDesc::Sample>(_numSamples);
+		memcpy(pBlock->pSamples, _pSamples, _numSamples * sizeof(DataFormatDesc::Sample));
+	}
 }
 
 Result SlimKTX2::allocateMipLevelArray()
@@ -351,7 +375,7 @@ Result SlimKTX2::allocateMipLevelArray()
 
 	if (m_pMipLevelArray == nullptr)
 	{
-		return Result::ContainerNotAllocated;
+		return Result::MipLevelArryNotAllocated;
 	}
 
 	for (uint32_t l = 0u; l < getLevelCount(); ++l)
@@ -361,11 +385,9 @@ Result SlimKTX2::allocateMipLevelArray()
 		levelSize *= getLayerCount();
 
 		m_pMipLevelArray[l] = allocateArray<uint8_t>(levelSize);
-		//memset(m_pMipLevelArray[l], 0, levelSize);
-
 		if (m_pMipLevelArray[l] == nullptr)
 		{
-			return Result::ContainerNotAllocated;
+			return Result::MipLevelArryNotAllocated;
 		}
 	}
 
@@ -404,7 +426,7 @@ Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _fa
 {
 	if (m_pMipLevelArray == nullptr)
 	{
-		return Result::ContainerNotAllocated;
+		return Result::MipLevelArryNotAllocated;
 	}
 	if (_level >= m_header.levelCount)
 	{
@@ -562,8 +584,8 @@ bool SlimKTX2::readDFD(IOHandle _file)
 void SlimKTX2::writeDFD(IOHandle _file) const
 {
 	// TODO: validate total size
-	write(_file, &m_dfd.totalSize);
 
+	write(_file, &m_dfd.totalSize);
 	auto* pBlock = m_dfd.pBlocks;
 	while (pBlock != nullptr)
 	{

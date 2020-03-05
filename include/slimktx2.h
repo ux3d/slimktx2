@@ -87,7 +87,7 @@ namespace ux3d
 			InvalidFaceIndex,
 			InvalidLayerIndex,
 			LevelIndexNotAllocated,
-			ContainerNotAllocated,
+			MipLevelArryNotAllocated,
 			DataFormatDescNotAllocated,
 		};
 
@@ -95,6 +95,7 @@ namespace ux3d
 
 		// SlimKTX2 ktx(callbacks);
 		// ktx.specifyFormat(Format::R16G16B16A16_SFLOAT, 1024, 1024);
+		// ktx.addDFDBlock(...);
 		// ktx.allocateMipLevelArray();
 		// ktx.setImage(...);
 		// ktx.serialize(_file);
@@ -124,6 +125,8 @@ namespace ux3d
 			// fills header and locks format/data-layout for addImage
 			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 0u, uint32_t _layerCount = 0u);
 
+			void addDFDBlock(const DataFormatDesc::BlockHeader& _header, const DataFormatDesc::Sample* _pSamples = nullptr, uint32_t _numSamples = 0u);
+
 			// allocates all image memory required for setImage
 			Result allocateMipLevelArray();
 
@@ -148,7 +151,7 @@ namespace ux3d
 			T* allocateArray(size_t _count = 1u) { return new(reinterpret_cast<T*>(allocate(sizeof(T) * _count))) T{}; }
 
 			template<class T>
-			bool read(IOHandle _file, T* _pData, size_t _count = 1u) { return sizeof(T) * _count == m_callbacks.read(m_callbacks.userData, _file, _pData, sizeof(T) * _count); }
+			bool read(IOHandle _file, T* _pData, size_t _count = 1u) { return _pData != nullptr && sizeof(T) * _count == m_callbacks.read(m_callbacks.userData, _file, _pData, sizeof(T) * _count); }
 
 			template<class T>
 			void write(IOHandle _file, const T* _pData, size_t _count = 1u) const { m_callbacks.write(m_callbacks.userData, _file, _pData, sizeof(T)* _count); }

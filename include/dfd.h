@@ -390,6 +390,8 @@ namespace ux3d
 			Block* pBlocks = nullptr; // Linked list
 
 			uint32_t computeSize() const;
+
+            Block* getLastBlock() const;
 		};
 	} // !slimktx2
 } // !ux3d

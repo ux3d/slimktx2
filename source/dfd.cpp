@@ -30,7 +30,7 @@ DataFormatDesc::BlockHeader::BlockHeader() :
 
 uint32_t DataFormatDesc::computeSize() const
 {
-	size_t size = 0u; // totalSize member ignored
+	size_t size = sizeof(uint32_t); // totalSize member
 
 	const Block* pBlock = pBlocks;
 	while (pBlock != nullptr)
@@ -46,4 +46,19 @@ uint32_t DataFormatDesc::computeSize() const
 	};
 
 	return static_cast<uint32_t>(size);
+}
+
+ux3d::slimktx2::DataFormatDesc::Block* ux3d::slimktx2::DataFormatDesc::getLastBlock() const
+{
+	Block* pBlock = pBlocks;
+	while (pBlock != nullptr)
+	{
+		if (pBlock->pNext == nullptr)
+		{
+			break;
+		}
+		pBlock = pBlock->pNext;
+	}
+
+	return pBlock;
 }
