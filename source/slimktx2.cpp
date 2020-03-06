@@ -42,10 +42,10 @@ void SlimKTX2::clear()
 	}
 	m_pLevels = nullptr;
 
-	// DFD
 	destroyDFD();
 
-	// mip map array
+	destroyKVD();
+
 	destoryMipLevelArray();
 }
 
@@ -114,7 +114,18 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	// TODO: kvd and sgd	
+	// kvd is mandatory
+	if (m_sections.kvdByteLength < (sizeof(uint32_t) + 2u) || seek(_file, m_sections.kvdByteOffset) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	if (readKVD(_file) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	// TODO: sgd	
 
 	Result res = allocateMipLevelArray();
 
@@ -164,6 +175,12 @@ Result SlimKTX2::serialize(IOHandle _file)
 		return Result::DataFormatDescNotAllocated;
 	}
 
+	if (m_kvd.pKeyValues == nullptr)
+	{
+		log("KVD not specified\n");
+		return Result::KeyValueDataNotAllocated;
+	}
+
 	const size_t streamStart = tell(_file);
 	auto filePos = [&](IOHandle file) -> size_t { return tell(file) - streamStart; };
 
@@ -172,10 +189,10 @@ Result SlimKTX2::serialize(IOHandle _file)
 
 	const uint32_t dfdByteLength = m_dfd.computeSize();
 	const uint32_t dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
-	const uint32_t kvdByteLength = 0u; // TODO compute
+	const uint32_t kvdByteLength = m_kvd.computeSize();
 	const uint32_t kvdByteOffset = dfdByteOffset + dfdByteLength;
 	const uint64_t sgdByteLength = 0u;
-	/*const*/ uint64_t sgdByteOffset = kvdByteOffset + kvdByteLength;
+	uint64_t sgdByteOffset = kvdByteOffset + kvdByteLength;
 
 	const uint32_t sdgPadding = getPadding(sgdByteOffset, 8u);
 
@@ -210,7 +227,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 	m_sections.dfdByteOffset = dfdByteOffset;
 
 	m_sections.kvdByteLength = kvdByteLength;
-	m_sections.kvdByteOffset = kvdByteLength != 0u ? kvdByteOffset : 0u;
+	m_sections.kvdByteOffset = kvdByteOffset;
 
 	//sdg is optional
 	m_sections.sgdByteLength = sgdByteLength;
@@ -237,7 +254,20 @@ Result SlimKTX2::serialize(IOHandle _file)
 		writeDFD(_file);	
 	}
 
-	// TODO: write kvd and sgd
+	curPos = filePos(_file);
+	log("KVD offset %llu size %u\n", curPos, kvdByteLength);
+
+	if (kvdByteLength != 0u)
+	{
+		if (curPos != m_sections.kvdByteOffset)
+		{
+			return Result::IOWriteFail;
+		}
+
+		writeKVD(_file);
+	}
+
+	// TODO: sgd
 	// dfd and kvd are required fields and the validator will emit warnings
 	// some parser implementation still work as they also ignore those fields.
 
@@ -306,14 +336,17 @@ const DataFormatDesc& SlimKTX2::getDFD() const
 	return m_dfd;
 }
 
+const KeyValueData& SlimKTX2::getKVD() const
+{
+	return m_kvd;
+}
+
 Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount, uint32_t _faceCount, uint32_t _depth, uint32_t _layerCount)
 {
 	if (m_pLevels != nullptr)
 	{
 		free(m_pLevels);
 	}
-
-	destroyDFD();
 
 	memcpy(m_header.identifier, Header::Magic, sizeof(m_header.identifier));
 	m_header.vkFormat = _vkFormat;
@@ -339,6 +372,8 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 
 	const uint32_t levelCount = getLevelCount();
 	m_pLevels = allocateArray<LevelIndex>(levelCount);
+
+	addKeyValue(KeyValueData::KTXwriterKey, KeyValueData::KTXwriterKeyLength, KeyValueData::KTXwriterValue, KeyValueData::KTXwriterValueLength);
 
 	return Result::Success;
 }
@@ -366,6 +401,28 @@ void ux3d::slimktx2::SlimKTX2::addDFDBlock(const DataFormatDesc::BlockHeader& _h
 		pBlock->pSamples = allocateArray<DataFormatDesc::Sample>(_numSamples);
 		memcpy(pBlock->pSamples, _pSamples, _numSamples * sizeof(DataFormatDesc::Sample));
 	}
+}
+
+void SlimKTX2::addKeyValue(const void* _key, uint32_t _keyLength, const void* _value, uint32_t _valueLength)
+{
+	auto pEntry = m_kvd.getLastEntry();
+
+	if (pEntry == nullptr) // first entry
+	{
+		pEntry = allocateArray<KeyValueData::Entry>();
+		m_kvd.pKeyValues = pEntry;
+	}
+	else
+	{
+		pEntry->pNext = allocateArray<KeyValueData::Entry>();
+		pEntry = pEntry->pNext;
+	}
+
+	pEntry->keyAndValueByteLength = _keyLength + _valueLength;
+	pEntry->pKeyValue = allocateArray<uint8_t>(pEntry->keyAndValueByteLength);
+
+	memcpy(pEntry->pKeyValue, _key, _keyLength);
+	memcpy(pEntry->pKeyValue + _keyLength, _value, _valueLength);
 }
 
 Result SlimKTX2::allocateMipLevelArray()
@@ -539,6 +596,8 @@ bool SlimKTX2::readDFD(IOHandle _file)
 		return false;
 	}
 
+	destroyDFD();
+
 	uint32_t remainingSize = m_dfd.totalSize;
 
 	auto* pBlock = m_dfd.pBlocks;
@@ -588,8 +647,6 @@ bool SlimKTX2::readDFD(IOHandle _file)
 
 void SlimKTX2::writeDFD(IOHandle _file) const
 {
-	// TODO: validate total size
-
 	write(_file, &m_dfd.totalSize);
 	auto* pBlock = m_dfd.pBlocks;
 	while (pBlock != nullptr)
@@ -606,7 +663,89 @@ void SlimKTX2::writeDFD(IOHandle _file) const
 	};
 }
 
-void ux3d::slimktx2::SlimKTX2::destoryMipLevelArray()
+void SlimKTX2::destroyKVD()
+{
+	auto* pEntry = m_kvd.pKeyValues;
+	while (pEntry != nullptr)
+	{
+		auto* pNext = pEntry->pNext;
+		pEntry->pNext = nullptr;
+
+		if (pEntry->pKeyValue != nullptr)
+		{
+			free(pEntry->pKeyValue);
+			pEntry->pKeyValue = nullptr;
+		}
+
+		free(pEntry);
+		pEntry = pNext;
+	};
+	m_kvd.pKeyValues = nullptr;
+}
+
+bool SlimKTX2::readKVD(IOHandle _file)
+{
+	destroyKVD();
+
+	uint32_t remainingSize = m_sections.kvdByteLength;
+
+	auto* pEntry = m_kvd.pKeyValues;
+	while (remainingSize >= sizeof(uint32_t) + 2u) // minimum entry size 
+	{
+		auto* pNew = allocateArray<KeyValueData::Entry>();
+
+		if (pEntry != nullptr)
+		{
+			pEntry->pNext = pNew;
+		}
+		else
+		{
+			m_kvd.pKeyValues = pNew;
+		}
+
+		if (read(_file, &pNew->keyAndValueByteLength) == false)
+		{
+			return false;
+		}
+
+		remainingSize -= sizeof(uint32_t);
+		remainingSize -= pNew->keyAndValueByteLength;
+
+		pNew->pKeyValue = allocateArray<uint8_t>(pNew->keyAndValueByteLength);
+		if (read(_file, pNew->pKeyValue, pNew->keyAndValueByteLength) == false)
+		{
+			return false;
+		}
+
+		const uint32_t padding = getPadding(pNew->keyAndValueByteLength, 4u);
+		if (padding != 0u)
+		{
+			auto pos = tell(_file);
+			seek(_file, pos + padding);
+			remainingSize -= padding;		
+		}
+	}
+
+	return remainingSize == 0u;
+}
+
+void SlimKTX2::writeKVD(IOHandle _file) const
+{
+	auto* pEntry = m_kvd.pKeyValues;
+	while (pEntry != nullptr)
+	{
+		write(_file, &pEntry->keyAndValueByteLength);
+		if (pEntry->pKeyValue != nullptr && pEntry->keyAndValueByteLength > 0u)
+		{
+			write(_file, pEntry->pKeyValue, pEntry->keyAndValueByteLength);
+			const uint32_t padding = getPadding(pEntry->keyAndValueByteLength, 4u);
+			writePadding(_file, padding);
+		}
+		pEntry = pEntry->pNext;
+	};
+}
+
+void SlimKTX2::destoryMipLevelArray()
 {
 	if (m_pMipLevelArray != nullptr)
 	{

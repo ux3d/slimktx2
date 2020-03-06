@@ -5,6 +5,7 @@
 #include <new.h> // placement new
 
 #include "dfd.h"
+#include "kvd.h"
 #include "callbacks.h"
 #include "format.h"
 
@@ -63,18 +64,6 @@ namespace ux3d
 			uint64_t uncompressedByteLength;
 		};
 
-		struct KeyValueData
-		{
-			uint32_t keyAndValueByteLength = 0u;
-			uint8_t* pKeyAndValue = nullptr; // uint8_t [keyAndValueByteLength]
-			// align(4)
-		};
-
-		struct SuperCompressionGlobalData
-		{
-			//uint8_t[sgdByteLength];
-		};
-
 		enum class Result : uint32_t
 		{
 			Success = 0u,
@@ -89,6 +78,7 @@ namespace ux3d
 			LevelIndexNotAllocated,
 			MipLevelArryNotAllocated,
 			DataFormatDescNotAllocated,
+			KeyValueDataNotAllocated
 		};
 
 		// Serialization API:
@@ -122,11 +112,14 @@ namespace ux3d
 
 			const Header& getHeader() const;
 			const DataFormatDesc& getDFD() const;
+			const KeyValueData& getKVD() const;
 
 			// fills header and locks format/data-layout for addImage
 			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 0u, uint32_t _layerCount = 0u);
 
 			void addDFDBlock(const DataFormatDesc::BlockHeader& _header, const DataFormatDesc::Sample* _pSamples = nullptr, uint32_t _numSamples = 0u);
+
+			void addKeyValue(const void* _key, uint32_t _keyLength, const void* _value, uint32_t _valueLength);
 
 			// allocates all image memory required for setImage
 			Result allocateMipLevelArray();
@@ -170,6 +163,10 @@ namespace ux3d
 			bool readDFD(IOHandle _file);
 			void writeDFD(IOHandle _file) const;
 
+			void destroyKVD();
+			bool readKVD(IOHandle _file);
+			void writeKVD(IOHandle _file) const;
+
 			void destoryMipLevelArray();
 
 		private:
@@ -182,6 +179,7 @@ namespace ux3d
 			LevelIndex* m_pLevels = nullptr;
 
 			DataFormatDesc m_dfd{};
+			KeyValueData m_kvd{};
 
 			// mipLevel array
 			uint8_t** m_pMipLevelArray = nullptr;
