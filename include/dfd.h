@@ -369,7 +369,20 @@ namespace ux3d
 				BlockHeader();
 			};
 
-			struct Sample { uint32_t data[4]; }; // TODO: https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#_anchor_id_sample_xreflabel_sample_sample_information
+			struct Sample
+            { 
+                uint32_t bitOffset : 16;
+                uint32_t bitLength : 8;
+                uint32_t channelType : 8;
+
+                uint32_t samplePosition0 : 8;
+                uint32_t samplePosition1 : 8;
+                uint32_t samplePosition2 : 8;
+                uint32_t samplePosition3 : 8;
+
+                uint32_t lower;
+                uint32_t upper;
+            }; // TODO: https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#_anchor_id_sample_xreflabel_sample_sample_information
 
 			static constexpr uint32_t blockHeaderSize = sizeof(BlockHeader); // 24u
 			static constexpr uint32_t sampleSize = sizeof(Sample); // 16u
