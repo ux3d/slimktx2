@@ -301,6 +301,11 @@ const Header& SlimKTX2::getHeader() const
 	return m_header;
 }
 
+const DataFormatDesc& SlimKTX2::getDFD() const
+{
+	return m_dfd;
+}
+
 Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount, uint32_t _faceCount, uint32_t _depth, uint32_t _layerCount)
 {
 	if (m_pLevels != nullptr)

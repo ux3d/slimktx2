@@ -121,6 +121,7 @@ namespace ux3d
 			uint32_t getFaceCount() const;
 
 			const Header& getHeader() const;
+			const DataFormatDesc& getDFD() const;
 
 			// fills header and locks format/data-layout for addImage
 			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 0u, uint32_t _layerCount = 0u);

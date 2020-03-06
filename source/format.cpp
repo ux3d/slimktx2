@@ -4,21 +4,27 @@
 
 uint32_t ux3d::slimktx2::getTypeSize(ux3d::slimktx2::Format _vkFormat)
 {
-	if (_vkFormat == Format::UNDEFINED ||
+	if ((_vkFormat == Format::UNDEFINED) || (_vkFormat == Format::R4G4_UNORM_PACK8) ||
 		(_vkFormat >= Format::R8_UNORM && _vkFormat <= Format::B8G8R8A8_SRGB))
 	{
 		return 1u;
 	}
-	else if (_vkFormat >= Format::R16_UNORM && _vkFormat <= Format::R16G16B16A16_SFLOAT)
+	else if ((_vkFormat >= Format::R16_UNORM && _vkFormat <= Format::R16G16B16A16_SFLOAT) ||
+		(_vkFormat >= Format::R4G4B4A4_UNORM_PACK16 && _vkFormat <= Format::A1R5G5B5_UNORM_PACK16))
 	{
 		return 2u;
 	}
-	else if (_vkFormat >= Format::R32_UINT && _vkFormat <= Format::R32G32B32A32_SFLOAT)
+	else if ((_vkFormat >= Format::R32_UINT && _vkFormat <= Format::R32G32B32A32_SFLOAT) || 
+		(_vkFormat >= Format::A2R10G10B10_UNORM_PACK32 && _vkFormat <= Format::B10G11R11_UFLOAT_PACK32))
 	{
 		return 4u;
 	}
+	else if (_vkFormat >= Format::R64_UINT && _vkFormat <= Format::R64G64B64A64_SFLOAT)
+	{
+		return 8u;
+	}
 
-	// TODO: Implement for 64bit and packed values.
+	// TODO: Implement depth/stencil formats
 
 	return 0u; // invalid
 }
