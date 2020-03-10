@@ -38,5 +38,21 @@ namespace ux3d
 			// optional
 			LogFunc log = nullptr;
 		};
+
+		inline Callbacks operator+(const Callbacks& _lhs, const Callbacks& _rhs)
+		{
+			Callbacks callback = _lhs;
+
+			if (callback.userData == nullptr) { callback.userData = _rhs.userData; }
+			if (callback.allocate == nullptr) { callback.allocate = _rhs.allocate; }
+			if (callback.deallocate == nullptr) { callback.deallocate = _rhs.deallocate; }
+			if (callback.read == nullptr) { callback.read = _rhs.read; }
+			if (callback.write == nullptr) { callback.write = _rhs.write; }
+			if (callback.tell == nullptr) { callback.tell = _rhs.tell; }
+			if (callback.seek == nullptr) { callback.seek = _rhs.seek; }
+			if (callback.seek == nullptr) { callback.seek = _rhs.seek; }
+			
+			return callback;
+		}
 	}// !slimktx2
 } // ux3d
