@@ -39,7 +39,7 @@ namespace ux3d
 			LogFunc log = nullptr;
 		};
 
-		inline Callbacks operator+(const Callbacks& _lhs, const Callbacks& _rhs)
+		inline Callbacks operator|(const Callbacks& _lhs, const Callbacks& _rhs)
 		{
 			Callbacks callback = _lhs;
 
@@ -50,7 +50,7 @@ namespace ux3d
 			if (callback.write == nullptr) { callback.write = _rhs.write; }
 			if (callback.tell == nullptr) { callback.tell = _rhs.tell; }
 			if (callback.seek == nullptr) { callback.seek = _rhs.seek; }
-			if (callback.seek == nullptr) { callback.seek = _rhs.seek; }
+			if (callback.log == nullptr) { callback.log = _rhs.log; }
 			
 			return callback;
 		}
