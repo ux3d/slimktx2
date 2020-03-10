@@ -28,7 +28,7 @@ SlimKTX2::~SlimKTX2()
 	clear();
 }
 
-void ux3d::slimktx2::SlimKTX2::setCallbacks(const Callbacks& _callbacks)
+void SlimKTX2::setCallbacks(const Callbacks& _callbacks)
 {
 	m_callbacks = _callbacks;
 }
@@ -150,8 +150,6 @@ Result SlimKTX2::parse(IOHandle _file)
 		}
 	}
 
-	// TODO: copy from _file to m_pContainer using m_pLevel offsets instead of copying the whole container to memory
-
 	return Result::Success;
 }
 
@@ -192,7 +190,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 	const uint32_t kvdByteLength = m_kvd.computeSize();
 	const uint32_t kvdByteOffset = dfdByteOffset + dfdByteLength;
 	const uint64_t sgdByteLength = 0u;
-	uint64_t sgdByteOffset = kvdByteOffset + kvdByteLength;
+	uint64_t sgdByteOffset = static_cast<uint64_t>(kvdByteOffset) + static_cast<uint64_t>(kvdByteLength);
 
 	const uint32_t sdgPadding = getPadding(sgdByteOffset, 8u);
 
@@ -531,7 +529,7 @@ void* SlimKTX2::allocate(size_t _size)
 
 void SlimKTX2::free(void* _pData)
 {
-	m_callbacks.free(m_callbacks.userData, _pData);
+	m_callbacks.deallocate(m_callbacks.userData, _pData);
 }
 
 void ux3d::slimktx2::SlimKTX2::writePadding(IOHandle _file, size_t _byteSize) const

@@ -10,7 +10,7 @@ namespace ux3d
 	namespace slimktx2
 	{
 		using AllocationFunc = void* (*)(void* _pUserData, size_t _size);
-		using FreeFunc = void(*)(void* _pUserData, void* _pData);
+		using DeallocationFunc = void(*)(void* _pUserData, void* _pData);
 
 		// IO - stream or file
 		using IOHandle = void*;
@@ -27,7 +27,7 @@ namespace ux3d
 			void* userData = nullptr; // holds allocator, user implementations
 
 			AllocationFunc allocate = nullptr;
-			FreeFunc free = nullptr;
+			DeallocationFunc deallocate = nullptr;
 
 			ReadFunc read = nullptr;
 			WriteFunc write = nullptr;

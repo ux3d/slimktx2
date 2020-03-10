@@ -21,7 +21,7 @@ Callbacks MemoryStreamCallback::getCallback()
 	ux3d::slimktx2::Callbacks callbacks{};
 
 	callbacks.allocate = allocate;
-	callbacks.free = deallocate;
+	callbacks.deallocate = deallocate;
 	callbacks.read = read;
 	callbacks.tell = tell;
 	callbacks.seek = seek;
