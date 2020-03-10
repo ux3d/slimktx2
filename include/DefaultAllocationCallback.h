@@ -11,9 +11,9 @@ namespace ux3d
 		class DefaultAllocationCallback
 		{
 		public:
-			slimktx2::Callbacks getCallback() const;
+			Callbacks getCallback() const;
 
-			operator slimktx2::Callbacks() const;
+			operator Callbacks() const;
 
 		private:
 			static void* allocate(void* _pUserData, size_t _size);

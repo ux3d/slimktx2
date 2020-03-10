@@ -8,7 +8,7 @@ using namespace ux3d::slimktx2;
 
 inline Callbacks DefaultAllocationCallback::getCallback() const
 {
-	slimktx2::Callbacks callback{};
+	Callbacks callback{};
 
 	// userdata not required
 	callback.allocate = allocate;

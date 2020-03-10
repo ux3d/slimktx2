@@ -8,7 +8,7 @@ using namespace ux3d::slimktx2;
 
 Callbacks DefaultMemoryStreamCallback::getCallback() const
 {
-	slimktx2::Callbacks callback{};
+	Callbacks callback{};
 
 	callback.read = read;
 	callback.write = write;

@@ -11,9 +11,9 @@ namespace ux3d
 		class DefaultConsoleLogCallback
 		{
 		public:
-			slimktx2::Callbacks getCallback() const;
+			Callbacks getCallback() const;
 
-			operator slimktx2::Callbacks() const;
+			operator Callbacks() const;
 
 		private:
 			static void log(void* _pUserData, const char* _pFormat, va_list _args);

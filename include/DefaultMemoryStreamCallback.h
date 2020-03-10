@@ -40,9 +40,9 @@ namespace ux3d
 		class DefaultMemoryStreamCallback
 		{
 		public:
-			slimktx2::Callbacks getCallback() const;
+			Callbacks getCallback() const;
 
-			operator slimktx2::Callbacks() const;
+			operator Callbacks() const;
 
 		private:
 			static size_t read(void* _pUserData, IOHandle _iohandle, void* _pData, size_t _size);

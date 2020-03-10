@@ -7,7 +7,7 @@ using namespace ux3d::slimktx2;
 
 Callbacks DefaultConsoleLogCallback::getCallback() const
 {
-	slimktx2::Callbacks callback{};
+	Callbacks callback{};
 
 	// userdata not required
 	callback.log = log;
