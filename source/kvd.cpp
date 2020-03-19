@@ -44,7 +44,7 @@ uint32_t KeyValueData::Entry::getKeyLength() const
 	uint32_t length = 0u;
 	if (pKeyValue != nullptr)
 	{		
-		for (; pKeyValue[length] != 0u; ++length) {}
+		for (; pKeyValue[length] != 0u && length < keyAndValueByteLength; ++length) {}
 	}
 	return length;
 }
