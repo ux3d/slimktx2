@@ -45,5 +45,5 @@ size_t DefaultFileIOCallback::tell(void* _pUserData, IOHandle _file)
 bool DefaultFileIOCallback::seek(void* _pUserData, IOHandle _file, size_t _offset)
 {
 	FILE* pFile = static_cast<FILE*>(_file);
-	return fseek(pFile, _offset, SEEK_SET) == _offset;
+	return fseek(pFile, _offset, SEEK_SET) == 0;
 }

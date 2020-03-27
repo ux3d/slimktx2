@@ -104,7 +104,7 @@ Result SlimKTX2::parse(IOHandle _file)
 	}
 
 	// dfd is mandatory
-	if (m_sections.dfdByteLength < sizeof(uint32_t) || seek(_file, m_sections.dfdByteOffset) == false)
+	if (seek(_file, m_sections.dfdByteOffset) == false)
 	{
 		return Result::IOReadFail;
 	}
@@ -115,7 +115,7 @@ Result SlimKTX2::parse(IOHandle _file)
 	}
 
 	// kvd is mandatory
-	if (m_sections.kvdByteLength < (sizeof(uint32_t) + 2u) || seek(_file, m_sections.kvdByteOffset) == false)
+	if (seek(_file, m_sections.kvdByteOffset) == false)
 	{
 		return Result::IOReadFail;
 	}
