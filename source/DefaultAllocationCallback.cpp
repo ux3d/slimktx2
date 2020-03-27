@@ -6,7 +6,7 @@
 
 using namespace ux3d::slimktx2;
 
-inline Callbacks DefaultAllocationCallback::getCallback() const
+Callbacks DefaultAllocationCallback::getCallback() const
 {
 	Callbacks callback{};
 
