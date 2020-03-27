@@ -1,7 +1,8 @@
 // Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #include "DefaultConsoleLogCallback.h"
-#include <stdio.h>
+
+#include <cstdio>
 
 using namespace ux3d::slimktx2;
 

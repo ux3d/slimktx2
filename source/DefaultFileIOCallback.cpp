@@ -2,7 +2,7 @@
 
 #include "DefaultFileIOCallback.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace ux3d::slimktx2;
 

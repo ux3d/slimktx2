@@ -2,7 +2,7 @@
 
 #include "DefaultAllocationCallback.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace ux3d::slimktx2;
 

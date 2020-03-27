@@ -1,5 +1,5 @@
 #include "kvd.h"
-#include <string.h>
+#include <cstring>
 #include "format.h"
 
 using namespace ux3d::slimktx2;

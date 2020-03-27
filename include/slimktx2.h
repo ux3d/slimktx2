@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <new.h> // placement new
+#include <new>
 
 #include "dfd.h"
 #include "kvd.h"

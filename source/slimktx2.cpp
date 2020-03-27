@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #include "slimktx2.h"
-#include <string.h>
+#include <cstring>
 
 using namespace ux3d::slimktx2;
 

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "callbacks.h"
-#include <stdint.h>
+#include <cstdint>
 
 namespace ux3d
 {

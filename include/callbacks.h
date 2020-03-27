@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <stdarg.h>
-#include <stddef.h>
+#include <cstdarg>
+#include <cstddef>
 
 namespace ux3d
 {

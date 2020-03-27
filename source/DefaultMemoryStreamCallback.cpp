@@ -2,7 +2,7 @@
 
 #include "DefaultMemoryStreamCallback.h"
 
-#include <string.h>
+#include <cstring>
 
 using namespace ux3d::slimktx2;
 

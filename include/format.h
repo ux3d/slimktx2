@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace ux3d
 {
