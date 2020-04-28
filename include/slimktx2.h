@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include <new.h>
+#include <new>
 
 namespace ux3d
 {
