@@ -1,7 +1,7 @@
-﻿// Copyright (c) 2019 UX3D GmbH. All rights reserved.
+﻿// Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #include "slimktx2.h"
-#include <string.h>
+#include <cstring>
 
 using namespace ux3d::slimktx2;
 
@@ -28,7 +28,7 @@ SlimKTX2::~SlimKTX2()
 	clear();
 }
 
-void ux3d::slimktx2::SlimKTX2::setCallbacks(const Callbacks& _callbacks)
+void SlimKTX2::setCallbacks(const Callbacks& _callbacks)
 {
 	m_callbacks = _callbacks;
 }
@@ -42,707 +42,11 @@ void SlimKTX2::clear()
 	}
 	m_pLevels = nullptr;
 
-	// DFD
 	destroyDFD();
 
-	// mip map array
+	destroyKVD();
+
 	destoryMipLevelArray();
-}
-
-uint32_t SlimKTX2::getTypeSize(Format _vkFormat)
-{
-	if (_vkFormat == Format::UNDEFINED || 
-		(_vkFormat >= Format::R8_UNORM && _vkFormat <= Format::B8G8R8A8_SRGB))
-	{
-		return 1u;
-	}
-	else if (_vkFormat >= Format::R16_UNORM && _vkFormat <= Format::R16G16B16A16_SFLOAT)
-	{
-		return 2u;
-	}
-	else if (_vkFormat >= Format::R32_UINT && _vkFormat <= Format::R32G32B32A32_SFLOAT)
-	{
-		return 4u;
-	}
-
-	return 0u; // invalid
-}
-
-uint32_t SlimKTX2::getPixelSize(Format _vkFormat)
-{
-	switch (_vkFormat)
-	{
-		// 1 BYTE
-	case Format::R8_UNORM:
-	case Format::R8_SNORM:
-	case Format::R8_UINT:
-	case Format::R8_SINT:
-	case Format::R8_SRGB:
-		return 1u;
-
-		// 2 BYTE
-	case Format::R8G8_UNORM:
-	case Format::R8G8_SNORM:
-	case Format::R8G8_UINT:
-	case Format::R8G8_SINT:
-	case Format::R8G8_SRGB:
-
-	case Format::R16_UNORM:
-	case Format::R16_SNORM:
-	case Format::R16_UINT:
-	case Format::R16_SINT:
-	case Format::R16_SFLOAT:
-		return 2u;
-
-		// 3 BYTE
-	case Format::R8G8B8_UNORM:
-	case Format::R8G8B8_SNORM:
-	case Format::R8G8B8_UINT:
-	case Format::R8G8B8_SINT:
-	case Format::R8G8B8_SRGB:
-
-	case Format::B8G8R8_UNORM:
-	case Format::B8G8R8_SNORM:
-	case Format::B8G8R8_UINT:
-	case Format::B8G8R8_SINT:
-	case Format::B8G8R8_SRGB:
-		return 3u;
-
-		// 4 BYTE
-	case Format::R8G8B8A8_UNORM:
-	case Format::R8G8B8A8_SNORM:
-	case Format::R8G8B8A8_UINT:
-	case Format::R8G8B8A8_SINT:
-	case Format::R8G8B8A8_SRGB:
-
-	case Format::B8G8R8A8_UNORM:
-	case Format::B8G8R8A8_SNORM:
-	case Format::B8G8R8A8_UINT:
-	case Format::B8G8R8A8_SINT:
-	case Format::B8G8R8A8_SRGB:
-
-	case Format::R16G16_UNORM:
-	case Format::R16G16_SNORM:
-	case Format::R16G16_UINT:
-	case Format::R16G16_SINT:
-	case Format::R16G16_SFLOAT:
-
-	case Format::R32_UINT:
-	case Format::R32_SINT:
-	case Format::R32_SFLOAT:
-		return 4u;
-
-		// 6 BYTE
-	case Format::R16G16B16_UNORM:
-	case Format::R16G16B16_SNORM:
-	case Format::R16G16B16_UINT:
-	case Format::R16G16B16_SINT:
-	case Format::R16G16B16_SFLOAT:
-		return 6u;
-
-		// 8 BYTE
-	case Format::R16G16B16A16_UNORM:
-	case Format::R16G16B16A16_SNORM:
-	case Format::R16G16B16A16_UINT:
-	case Format::R16G16B16A16_SINT:
-	case Format::R16G16B16A16_SFLOAT:
-
-	case Format::R32G32_UINT:
-	case Format::R32G32_SINT:
-	case Format::R32G32_SFLOAT:
-
-	case Format::R64_UINT:
-	case Format::R64_SINT:
-	case Format::R64_SFLOAT:
-		return 8u;
-
-		// 12 BYTE
-	case Format::R32G32B32_UINT:
-	case Format::R32G32B32_SINT:
-	case Format::R32G32B32_SFLOAT:
-		return 12u;
-
-		// 16 BYTE
-	case Format::R32G32B32A32_UINT:
-	case Format::R32G32B32A32_SINT:
-	case Format::R32G32B32A32_SFLOAT:
-
-	case Format::R64G64_UINT:
-	case Format::R64G64_SINT:
-	case Format::R64G64_SFLOAT:
-		return 16u;
-
-		// 24 BYTE
-	case Format::R64G64B64_UINT:
-	case Format::R64G64B64_SINT:
-	case Format::R64G64B64_SFLOAT:
-		return 24u;
-
-		// 32 BYTE
-	case Format::R64G64B64A64_UINT:
-	case Format::R64G64B64A64_SINT:
-	case Format::R64G64B64A64_SFLOAT:
-		return 32u;
-
-	default:
-		return 0u; // invalid
-	}
-}
-
-uint32_t SlimKTX2::getChannelCount(Format _vkFormat)
-{
-	switch (_vkFormat)
-	{
-	case Format::R8_UNORM:
-	case Format::R8_SNORM:
-	case Format::R8_UINT:
-	case Format::R8_SINT:
-	case Format::R8_SRGB:
-
-	case Format::R16_UNORM:
-	case Format::R16_SNORM:
-	case Format::R16_UINT:
-	case Format::R16_SINT:
-	case Format::R16_SFLOAT:
-
-	case Format::R32_UINT:
-	case Format::R32_SINT:
-	case Format::R32_SFLOAT:
-
-	case Format::R64_UINT:
-	case Format::R64_SINT:
-	case Format::R64_SFLOAT:
-		return 1u;
-
-	case Format::R8G8_UNORM:
-	case Format::R8G8_SNORM:
-	case Format::R8G8_UINT:
-	case Format::R8G8_SINT:
-	case Format::R8G8_SRGB:
-
-	case Format::R16G16_UNORM:
-	case Format::R16G16_SNORM:
-	case Format::R16G16_UINT:
-	case Format::R16G16_SINT:
-	case Format::R16G16_SFLOAT:
-
-	case Format::R32G32_UINT:
-	case Format::R32G32_SINT:
-	case Format::R32G32_SFLOAT:
-
-	case Format::R64G64_UINT:
-	case Format::R64G64_SINT:
-	case Format::R64G64_SFLOAT:
-		return 2u;
-
-	case Format::R8G8B8_UNORM:
-	case Format::R8G8B8_SNORM:
-	case Format::R8G8B8_UINT:
-	case Format::R8G8B8_SINT:
-	case Format::R8G8B8_SRGB:
-	case Format::B8G8R8_UNORM:
-	case Format::B8G8R8_SNORM:
-	case Format::B8G8R8_UINT:
-	case Format::B8G8R8_SINT:
-	case Format::B8G8R8_SRGB:
-
-	case Format::R16G16B16_UNORM:
-	case Format::R16G16B16_SNORM:
-	case Format::R16G16B16_UINT:
-	case Format::R16G16B16_SINT:
-	case Format::R16G16B16_SFLOAT:
-
-	case Format::R32G32B32_UINT:
-	case Format::R32G32B32_SINT:
-	case Format::R32G32B32_SFLOAT:
-
-	case Format::R64G64B64_UINT:
-	case Format::R64G64B64_SINT:
-	case Format::R64G64B64_SFLOAT:
-		return 3u;
-
-	case Format::R8G8B8A8_UNORM:
-	case Format::R8G8B8A8_SNORM:
-	case Format::R8G8B8A8_UINT:
-	case Format::R8G8B8A8_SINT:
-	case Format::R8G8B8A8_SRGB:
-	case Format::B8G8R8A8_UNORM:
-	case Format::B8G8R8A8_SNORM:
-	case Format::B8G8R8A8_UINT:
-	case Format::B8G8R8A8_SINT:
-	case Format::B8G8R8A8_SRGB:
-
-	case Format::R16G16B16A16_UNORM:
-	case Format::R16G16B16A16_SNORM:
-	case Format::R16G16B16A16_UINT:
-	case Format::R16G16B16A16_SINT:
-	case Format::R16G16B16A16_SFLOAT:
-
-	case Format::R32G32B32A32_UINT:
-	case Format::R32G32B32A32_SINT:
-	case Format::R32G32B32A32_SFLOAT:
-
-	case Format::R64G64B64A64_UINT:
-	case Format::R64G64B64A64_SINT:
-	case Format::R64G64B64A64_SFLOAT:
-		return 4u;
-
-	default:
-		return 0u; // invalid
-	}
-}
-
-uint32_t SlimKTX2::getChannelSize(Format _vkFormat, uint32_t _channelIndex)
-{
-	if (_channelIndex >= 4u)
-	{
-		return 0u;
-	}
-
-	switch (_vkFormat)
-	{
-		// 8 bits; does not depend on channel.
-	case Format::R8_UNORM:
-	case Format::R8_SNORM:
-	case Format::R8_UINT:
-	case Format::R8_SINT:
-	case Format::R8_SRGB:
-
-	case Format::R8G8_UNORM:
-	case Format::R8G8_SNORM:
-	case Format::R8G8_UINT:
-	case Format::R8G8_SINT:
-	case Format::R8G8_SRGB:
-
-	case Format::R8G8B8_UNORM:
-	case Format::R8G8B8_SNORM:
-	case Format::R8G8B8_UINT:
-	case Format::R8G8B8_SINT:
-	case Format::R8G8B8_SRGB:
-
-	case Format::B8G8R8_UNORM:
-	case Format::B8G8R8_SNORM:
-	case Format::B8G8R8_UINT:
-	case Format::B8G8R8_SINT:
-	case Format::B8G8R8_SRGB:
-
-	case Format::R8G8B8A8_UNORM:
-	case Format::R8G8B8A8_SNORM:
-	case Format::R8G8B8A8_UINT:
-	case Format::R8G8B8A8_SINT:
-	case Format::R8G8B8A8_SRGB:
-
-	case Format::B8G8R8A8_UNORM:
-	case Format::B8G8R8A8_SNORM:
-	case Format::B8G8R8A8_UINT:
-	case Format::B8G8R8A8_SINT:
-	case Format::B8G8R8A8_SRGB:
-		return 8u;
-
-		// 16 bits; does not depend on channel.
-	case Format::R16_UNORM:
-	case Format::R16_SNORM:
-	case Format::R16_UINT:
-	case Format::R16_SINT:
-	case Format::R16_SFLOAT:
-
-	case Format::R16G16_UNORM:
-	case Format::R16G16_SNORM:
-	case Format::R16G16_UINT:
-	case Format::R16G16_SINT:
-	case Format::R16G16_SFLOAT:
-
-	case Format::R16G16B16_UNORM:
-	case Format::R16G16B16_SNORM:
-	case Format::R16G16B16_UINT:
-	case Format::R16G16B16_SINT:
-	case Format::R16G16B16_SFLOAT:
-
-	case Format::R16G16B16A16_UNORM:
-	case Format::R16G16B16A16_SNORM:
-	case Format::R16G16B16A16_UINT:
-	case Format::R16G16B16A16_SINT:
-	case Format::R16G16B16A16_SFLOAT:
-		return 16u;
-
-		// 32 bits; does not depend on channel.
-	case Format::R32_UINT:
-	case Format::R32_SINT:
-	case Format::R32_SFLOAT:
-
-	case Format::R32G32_UINT:
-	case Format::R32G32_SINT:
-	case Format::R32G32_SFLOAT:
-
-	case Format::R32G32B32_UINT:
-	case Format::R32G32B32_SINT:
-	case Format::R32G32B32_SFLOAT:
-
-	case Format::R32G32B32A32_UINT:
-	case Format::R32G32B32A32_SINT:
-	case Format::R32G32B32A32_SFLOAT:
-		return 32u;
-
-		// 64 bits; does not depend on channel.
-	case Format::R64_UINT:
-	case Format::R64_SINT:
-	case Format::R64_SFLOAT:
-
-	case Format::R64G64_UINT:
-	case Format::R64G64_SINT:
-	case Format::R64G64_SFLOAT:
-
-	case Format::R64G64B64_UINT:
-	case Format::R64G64B64_SINT:
-	case Format::R64G64B64_SFLOAT:
-
-	case Format::R64G64B64A64_UINT:
-	case Format::R64G64B64A64_SINT:
-	case Format::R64G64B64A64_SFLOAT:
-		return 64u;
-	}
-
-	return 0u;
-}
-
-int32_t SlimKTX2::getChannelIndex(Format _vkFormat, Channel _channel)
-{
-	switch (_vkFormat)
-	{
-	case Format::R8_UNORM:
-	case Format::R8_SNORM:
-	case Format::R8_UINT:
-	case Format::R8_SINT:
-	case Format::R8_SRGB:
-
-	case Format::R16_UNORM:
-	case Format::R16_SNORM:
-	case Format::R16_UINT:
-	case Format::R16_SINT:
-	case Format::R16_SFLOAT:
-
-	case Format::R32_UINT:
-	case Format::R32_SINT:
-	case Format::R32_SFLOAT:
-
-	case Format::R64_UINT:
-	case Format::R64_SINT:
-	case Format::R64_SFLOAT:
-		if (_channel <= Channel::Red)
-		{
-			return _channel;
-		}
-		else
-		{
-			return -1;
-		}
-
-	case Format::R8G8_UNORM:
-	case Format::R8G8_SNORM:
-	case Format::R8G8_UINT:
-	case Format::R8G8_SINT:
-	case Format::R8G8_SRGB:
-
-	case Format::R16G16_UNORM:
-	case Format::R16G16_SNORM:
-	case Format::R16G16_UINT:
-	case Format::R16G16_SINT:
-	case Format::R16G16_SFLOAT:
-
-	case Format::R32G32_UINT:
-	case Format::R32G32_SINT:
-	case Format::R32G32_SFLOAT:
-
-	case Format::R64G64_UINT:
-	case Format::R64G64_SINT:
-	case Format::R64G64_SFLOAT:
-		if (_channel <= Channel::Green)
-		{
-			return _channel;
-		}
-		else
-		{
-			return -1;
-		}
-
-	case Format::R8G8B8_UNORM:
-	case Format::R8G8B8_SNORM:
-	case Format::R8G8B8_UINT:
-	case Format::R8G8B8_SINT:
-	case Format::R8G8B8_SRGB:
-
-	case Format::R16G16B16_UNORM:
-	case Format::R16G16B16_SNORM:
-	case Format::R16G16B16_UINT:
-	case Format::R16G16B16_SINT:
-	case Format::R16G16B16_SFLOAT:
-
-	case Format::R32G32B32_UINT:
-	case Format::R32G32B32_SINT:
-	case Format::R32G32B32_SFLOAT:
-
-	case Format::R64G64B64_UINT:
-	case Format::R64G64B64_SINT:
-	case Format::R64G64B64_SFLOAT:
-		if (_channel <= Channel::Blue)
-		{
-			return _channel;
-		}
-		else
-		{
-			return -1;
-		}
-
-	case Format::R8G8B8A8_UNORM:
-	case Format::R8G8B8A8_SNORM:
-	case Format::R8G8B8A8_UINT:
-	case Format::R8G8B8A8_SINT:
-	case Format::R8G8B8A8_SRGB:
-
-	case Format::R16G16B16A16_UNORM:
-	case Format::R16G16B16A16_SNORM:
-	case Format::R16G16B16A16_UINT:
-	case Format::R16G16B16A16_SINT:
-	case Format::R16G16B16A16_SFLOAT:
-
-	case Format::R32G32B32A32_UINT:
-	case Format::R32G32B32A32_SINT:
-	case Format::R32G32B32A32_SFLOAT:
-
-	case Format::R64G64B64A64_UINT:
-	case Format::R64G64B64A64_SINT:
-	case Format::R64G64B64A64_SFLOAT:
-		return _channel;
-
-	case Format::B8G8R8_UNORM:
-	case Format::B8G8R8_SNORM:
-	case Format::B8G8R8_UINT:
-	case Format::B8G8R8_SINT:
-	case Format::B8G8R8_SRGB:
-		if (_channel <= Channel::Blue)
-		{
-			if (_channel == Channel::Red)
-			{
-				return 2;
-			}
-			if (_channel == Channel::Green)
-			{
-				return 1;
-			}
-			else
-			{
-				return 0;
-			}
-		}
-		else
-		{
-			return -1;
-		}
-
-	case Format::B8G8R8A8_UNORM:
-	case Format::B8G8R8A8_SNORM:
-	case Format::B8G8R8A8_UINT:
-	case Format::B8G8R8A8_SINT:
-	case Format::B8G8R8A8_SRGB:
-		if (_channel == Channel::Red)
-		{
-			return 2;
-		}
-		if (_channel == Channel::Green)
-		{
-			return 1;
-		}
-		if (_channel == Channel::Blue)
-		{
-			return 0;
-		}
-		else
-		{
-			return 3;
-		}
-	}
-
-	return -1;
-}
-
-bool SlimKTX2::isFloat(Format _vkFormat)
-{
-
-	switch (_vkFormat)
-	{
-	case Format::R16_SFLOAT:
-
-	case Format::R16G16_SFLOAT:
-
-	case Format::R16G16B16_SFLOAT:
-
-	case Format::R16G16B16A16_SFLOAT:
-
-	case Format::R32_SFLOAT:
-
-	case Format::R32G32_SFLOAT:
-
-	case Format::R32G32B32_SFLOAT:
-
-	case Format::R32G32B32A32_SFLOAT:
-
-	case Format::R64_SFLOAT:
-
-	case Format::R64G64_SFLOAT:
-
-	case Format::R64G64B64_SFLOAT:
-
-	case Format::R64G64B64A64_SFLOAT:
-		return true;
-	}
-
-	return false;
-}
-
-bool SlimKTX2::isSigned(Format _vkFormat)
-{
-	switch (_vkFormat)
-	{
-		// 8 bits; does not depend on channel.
-	case Format::R8_SNORM:
-	case Format::R8_SINT:
-	case Format::R8_SRGB:
-
-	case Format::R8G8_SNORM:
-	case Format::R8G8_SINT:
-	case Format::R8G8_SRGB:
-
-	case Format::R8G8B8_SNORM:
-	case Format::R8G8B8_SINT:
-	case Format::R8G8B8_SRGB:
-
-	case Format::B8G8R8_SNORM:
-	case Format::B8G8R8_SINT:
-	case Format::B8G8R8_SRGB:
-
-	case Format::R8G8B8A8_SNORM:
-	case Format::R8G8B8A8_SINT:
-	case Format::R8G8B8A8_SRGB:
-
-	case Format::B8G8R8A8_SNORM:
-	case Format::B8G8R8A8_SINT:
-	case Format::B8G8R8A8_SRGB:
-
-	case Format::R16_SNORM:
-	case Format::R16_SINT:
-	case Format::R16_SFLOAT:
-
-	case Format::R16G16_SNORM:
-	case Format::R16G16_SINT:
-	case Format::R16G16_SFLOAT:
-
-	case Format::R16G16B16_SNORM:
-	case Format::R16G16B16_SINT:
-	case Format::R16G16B16_SFLOAT:
-
-	case Format::R16G16B16A16_SNORM:
-	case Format::R16G16B16A16_SINT:
-	case Format::R16G16B16A16_SFLOAT:
-
-	case Format::R32_SINT:
-	case Format::R32_SFLOAT:
-
-	case Format::R32G32_SINT:
-	case Format::R32G32_SFLOAT:
-
-	case Format::R32G32B32_SINT:
-	case Format::R32G32B32_SFLOAT:
-
-	case Format::R32G32B32A32_SINT:
-	case Format::R32G32B32A32_SFLOAT:
-
-	case Format::R64_SINT:
-	case Format::R64_SFLOAT:
-
-	case Format::R64G64_SINT:
-	case Format::R64G64_SFLOAT:
-
-	case Format::R64G64B64_SINT:
-	case Format::R64G64B64_SFLOAT:
-
-	case Format::R64G64B64A64_SINT:
-	case Format::R64G64B64A64_SFLOAT:
-		return true;
-	}
-
-	return false;
-}
-
-bool SlimKTX2::isNormalized(Format _vkFormat)
-{
-
-	switch (_vkFormat)
-	{
-	case Format::R8_UNORM:
-	case Format::R8_SNORM:
-
-	case Format::R8G8_UNORM:
-	case Format::R8G8_SNORM:
-
-	case Format::R8G8B8_UNORM:
-	case Format::R8G8B8_SNORM:
-
-	case Format::B8G8R8_UNORM:
-	case Format::B8G8R8_SNORM:
-
-	case Format::R8G8B8A8_UNORM:
-	case Format::R8G8B8A8_SNORM:
-
-	case Format::B8G8R8A8_UNORM:
-	case Format::B8G8R8A8_SNORM:
-
-	case Format::R16_UNORM:
-	case Format::R16_SNORM:
-
-	case Format::R16G16_UNORM:
-	case Format::R16G16_SNORM:
-
-	case Format::R16G16B16_UNORM:
-	case Format::R16G16B16_SNORM:
-
-	case Format::R16G16B16A16_UNORM:
-	case Format::R16G16B16A16_SNORM:
-		return true;
-	}
-
-	return false;
-}
-
-bool SlimKTX2::isSrgb(Format _vkFormat)
-{
-	switch (_vkFormat)
-	{
-	case Format::R8_SRGB:
-	case Format::R8G8_SRGB:
-	case Format::R8G8B8_SRGB:
-	case Format::B8G8R8_SRGB:
-	case Format::R8G8B8A8_SRGB:
-	case Format::B8G8R8A8_SRGB:
-		return true;
-	}
-
-	return false;
-}
-
-bool SlimKTX2::isPacked(Format _vkFormat)
-{
-	return false;
-}
-
-bool SlimKTX2::isCompressed(Format _vkFormat)
-{
-	return false;
-}
-
-uint64_t SlimKTX2::getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
-{
-	const uint64_t resolution = getPixelCount(_level, _width, _height, _depth);
-	return resolution * _pixelByteSize;
 }
 
 uint64_t SlimKTX2::getFaceImageOffset(uint32_t _level, uint32_t _face, uint32_t _layer) const
@@ -757,7 +61,7 @@ uint64_t SlimKTX2::getFaceImageOffset(uint32_t _level, uint32_t _face, uint32_t 
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 
 	// add largest level
-	const uint64_t faceSize = getFaceSize(getPixelSize(m_header.vkFormat), _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+	const uint64_t faceSize = getFaceSize(pixelSize, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 
 	// number of previous layers with either 1 or 6 faces
 	uint64_t prevFaces = faceSize * _layer * m_header.faceCount;
@@ -769,56 +73,6 @@ uint64_t SlimKTX2::getFaceImageOffset(uint32_t _level, uint32_t _face, uint32_t 
 	offset += prevFaces;
 
 	return offset;
-}
-
-uint32_t SlimKTX2::getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
-{
-	uint32_t result = _width >> _level;
-
-	if (_height != 0u)
-	{
-		result *= _height >> _level;
-	}
-	if (_depth != 0u)
-	{
-		result *= _depth >> _level;
-	}
-
-	return result;
-}
-
-uint32_t SlimKTX2::padding(uint64_t _value, uint32_t _alginment)
-{
-	return (_alginment - (_value % _alginment)) % _alginment;
-}
-
-uint32_t SlimKTX2::lcm(uint32_t _x, uint32_t _y)
-{
-	uint32_t max = _x > _y ? _x : _y;
-
-	while (!((max % _x == 0u) && (max % _y == 0u)))
-	{
-		++max;
-	}
-
-	return max;
-}
-
-uint32_t SlimKTX2::mipPadding(uint64_t _value, Format _vkFormat, bool _superCompression)
-{
-	if (_superCompression)
-	{
-		return 0; // 1u byte alignment
-	}
-	else if (_vkFormat == Format::UNDEFINED)
-	{
-		return SlimKTX2::padding(_value, 16u); // 16 byte alignment
-	}
-
-	const uint32_t texelBlockSize = getPixelSize(_vkFormat);
-	const uint32_t lcm = SlimKTX2::lcm(texelBlockSize, 4u);
-	const uint32_t padding = SlimKTX2::padding(_value, lcm);
-	return padding;
 }
 
 Result SlimKTX2::parse(IOHandle _file)
@@ -850,7 +104,7 @@ Result SlimKTX2::parse(IOHandle _file)
 	}
 
 	// dfd is mandatory
-	if (m_sections.dfdByteLength < sizeof(uint32_t) || seek(_file, m_sections.dfdByteOffset) == false)
+	if (seek(_file, m_sections.dfdByteOffset) == false)
 	{
 		return Result::IOReadFail;
 	}
@@ -860,7 +114,18 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	// TODO: kvd and sgd	
+	// kvd is mandatory
+	if (seek(_file, m_sections.kvdByteOffset) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	if (readKVD(_file) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	// TODO: sgd	
 
 	Result res = allocateMipLevelArray();
 
@@ -885,8 +150,6 @@ Result SlimKTX2::parse(IOHandle _file)
 		}
 	}
 
-	// TODO: copy from _file to m_pContainer using m_pLevel offsets instead of copying the whole container to memory
-
 	return Result::Success;
 }
 
@@ -894,17 +157,26 @@ Result SlimKTX2::serialize(IOHandle _file)
 {
 	if (m_pLevels == nullptr)
 	{
+		log("LevelIndex not specified\n");
 		return Result::LevelIndexNotAllocated;
 	}
 
 	if (m_pMipLevelArray == nullptr)
 	{
-		return Result::ContainerNotAllocated;
+		log("MipLevelArray not specified\n");
+		return Result::MipLevelArryNotAllocated;
 	}
 
 	if (m_dfd.pBlocks == nullptr)
 	{
+		log("DFD not specified\n");
 		return Result::DataFormatDescNotAllocated;
+	}
+
+	if (m_kvd.pKeyValues == nullptr)
+	{
+		log("KVD not specified\n");
+		return Result::KeyValueDataNotAllocated;
 	}
 
 	const size_t streamStart = tell(_file);
@@ -913,14 +185,14 @@ Result SlimKTX2::serialize(IOHandle _file)
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 	const uint32_t levelCount = getLevelCount();
 
-	const uint32_t dfdByteLength = m_dfd.totalSize + sizeof(uint32_t); // size of totalSize field
+	const uint32_t dfdByteLength = m_dfd.computeSize();
 	const uint32_t dfdByteOffset = sizeof(Header) + sizeof(SectionIndex) + sizeof(LevelIndex) * m_header.levelCount;
-	const uint32_t kvdByteLength = 0u; // TODO compute
+	const uint32_t kvdByteLength = m_kvd.computeSize();
 	const uint32_t kvdByteOffset = dfdByteOffset + dfdByteLength;
 	const uint64_t sgdByteLength = 0u;
-	/*const*/ uint64_t sgdByteOffset = kvdByteOffset + kvdByteLength;
+	uint64_t sgdByteOffset = static_cast<uint64_t>(kvdByteOffset) + static_cast<uint64_t>(kvdByteLength);
 
-	const uint32_t sdgPadding = padding(sgdByteOffset, 8u);
+	const uint32_t sdgPadding = getPadding(sgdByteOffset, 8u);
 
 	if (sgdByteLength > 0u)
 	{
@@ -931,12 +203,12 @@ Result SlimKTX2::serialize(IOHandle _file)
 
 	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 	{
-		const uint32_t mipPad = mipPadding(levelOffset, m_header.vkFormat, m_header.supercompressionScheme != 0u);
+		const uint32_t mipPad = getMipPadding(levelOffset, m_header.vkFormat, m_header.supercompressionScheme != 0u);
 		levelOffset += mipPad;
 
 		// start with the small level, fill them in reverse
 		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
-		levelSize *= m_header.faceCount;
+		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
 
 		// absolute levelOffset within the file
@@ -953,7 +225,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 	m_sections.dfdByteOffset = dfdByteOffset;
 
 	m_sections.kvdByteLength = kvdByteLength;
-	m_sections.kvdByteOffset = kvdByteLength != 0u ? kvdByteOffset : 0u;
+	m_sections.kvdByteOffset = kvdByteOffset;
 
 	//sdg is optional
 	m_sections.sgdByteLength = sgdByteLength;
@@ -980,7 +252,20 @@ Result SlimKTX2::serialize(IOHandle _file)
 		writeDFD(_file);	
 	}
 
-	// TODO: write kvd and sgd
+	curPos = filePos(_file);
+	log("KVD offset %llu size %u\n", curPos, kvdByteLength);
+
+	if (kvdByteLength != 0u)
+	{
+		if (curPos != m_sections.kvdByteOffset)
+		{
+			return Result::IOWriteFail;
+		}
+
+		writeKVD(_file);
+	}
+
+	// TODO: sgd
 	// dfd and kvd are required fields and the validator will emit warnings
 	// some parser implementation still work as they also ignore those fields.
 
@@ -996,7 +281,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 
 		curPos = filePos(_file);
 
-		const uint32_t mipPad = mipPadding(curPos, m_header.vkFormat, m_header.supercompressionScheme != 0u);
+		const uint32_t mipPad = getMipPadding(curPos, m_header.vkFormat, m_header.supercompressionScheme != 0u);
 
 		writePadding(_file, mipPad);
 
@@ -1044,14 +329,22 @@ const Header& SlimKTX2::getHeader() const
 	return m_header;
 }
 
+const DataFormatDesc& SlimKTX2::getDFD() const
+{
+	return m_dfd;
+}
+
+const KeyValueData& SlimKTX2::getKVD() const
+{
+	return m_kvd;
+}
+
 Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount, uint32_t _faceCount, uint32_t _depth, uint32_t _layerCount)
 {
 	if (m_pLevels != nullptr)
 	{
 		free(m_pLevels);
 	}
-
-	destroyDFD();
 
 	memcpy(m_header.identifier, Header::Magic, sizeof(m_header.identifier));
 	m_header.vkFormat = _vkFormat;
@@ -1076,16 +369,58 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	m_header.supercompressionScheme = 0u;
 
 	const uint32_t levelCount = getLevelCount();
-	const uint32_t levelIndexSize = static_cast<uint32_t>(sizeof(LevelIndex)) * levelCount;
-
 	m_pLevels = allocateArray<LevelIndex>(levelCount);
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 
-	// TODO: fill with meaningful data
-	m_dfd.pBlocks = allocateArray<DataFormatDesc::Block>();
-	m_dfd.totalSize = m_dfd.computeSize();
+	addKeyValue(KeyValueData::KTXwriterKey, KeyValueData::KTXwriterKeyLength, KeyValueData::KTXwriterValue, KeyValueData::KTXwriterValueLength);
 
 	return Result::Success;
+}
+
+void ux3d::slimktx2::SlimKTX2::addDFDBlock(const DataFormatDesc::BlockHeader& _header, const DataFormatDesc::Sample* _pSamples, uint32_t _numSamples)
+{
+	auto pBlock = m_dfd.getLastBlock();
+
+	if (pBlock == nullptr) // first block
+	{
+		pBlock = allocateArray<DataFormatDesc::Block>();
+		m_dfd.pBlocks = pBlock;
+	}
+	else
+	{
+		pBlock->pNext = allocateArray<DataFormatDesc::Block>();
+		pBlock = pBlock->pNext;
+	}
+
+	pBlock->header = _header;
+	pBlock->setSampleCount(_numSamples);
+
+	if (_pSamples != nullptr && _numSamples != 0u)
+	{
+		pBlock->pSamples = allocateArray<DataFormatDesc::Sample>(_numSamples);
+		memcpy(pBlock->pSamples, _pSamples, _numSamples * sizeof(DataFormatDesc::Sample));
+	}
+}
+
+void SlimKTX2::addKeyValue(const void* _key, uint32_t _keyLength, const void* _value, uint32_t _valueLength)
+{
+	auto pEntry = m_kvd.getLastEntry();
+
+	if (pEntry == nullptr) // first entry
+	{
+		pEntry = allocateArray<KeyValueData::Entry>();
+		m_kvd.pKeyValues = pEntry;
+	}
+	else
+	{
+		pEntry->pNext = allocateArray<KeyValueData::Entry>();
+		pEntry = pEntry->pNext;
+	}
+
+	pEntry->keyAndValueByteLength = _keyLength + _valueLength;
+	pEntry->pKeyValue = allocateArray<uint8_t>(pEntry->keyAndValueByteLength);
+
+	memcpy(pEntry->pKeyValue, _key, _keyLength);
+	memcpy(pEntry->pKeyValue + _keyLength, _value, _valueLength);
 }
 
 Result SlimKTX2::allocateMipLevelArray()
@@ -1100,7 +435,7 @@ Result SlimKTX2::allocateMipLevelArray()
 
 	if (m_pMipLevelArray == nullptr)
 	{
-		return Result::ContainerNotAllocated;
+		return Result::MipLevelArryNotAllocated;
 	}
 
 	for (uint32_t l = 0u; l < getLevelCount(); ++l)
@@ -1110,11 +445,9 @@ Result SlimKTX2::allocateMipLevelArray()
 		levelSize *= getLayerCount();
 
 		m_pMipLevelArray[l] = allocateArray<uint8_t>(levelSize);
-		//memset(m_pMipLevelArray[l], 0, levelSize);
-
 		if (m_pMipLevelArray[l] == nullptr)
 		{
-			return Result::ContainerNotAllocated;
+			return Result::MipLevelArryNotAllocated;
 		}
 	}
 
@@ -1153,7 +486,7 @@ Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _fa
 {
 	if (m_pMipLevelArray == nullptr)
 	{
-		return Result::ContainerNotAllocated;
+		return Result::MipLevelArryNotAllocated;
 	}
 	if (_level >= m_header.levelCount)
 	{
@@ -1196,7 +529,7 @@ void* SlimKTX2::allocate(size_t _size)
 
 void SlimKTX2::free(void* _pData)
 {
-	m_callbacks.free(m_callbacks.userData, _pData);
+	m_callbacks.deallocate(m_callbacks.userData, _pData);
 }
 
 void ux3d::slimktx2::SlimKTX2::writePadding(IOHandle _file, size_t _byteSize) const
@@ -1261,6 +594,8 @@ bool SlimKTX2::readDFD(IOHandle _file)
 		return false;
 	}
 
+	destroyDFD();
+
 	uint32_t remainingSize = m_dfd.totalSize;
 
 	auto* pBlock = m_dfd.pBlocks;
@@ -1310,9 +645,7 @@ bool SlimKTX2::readDFD(IOHandle _file)
 
 void SlimKTX2::writeDFD(IOHandle _file) const
 {
-	// TODO: validate total size
 	write(_file, &m_dfd.totalSize);
-
 	auto* pBlock = m_dfd.pBlocks;
 	while (pBlock != nullptr)
 	{
@@ -1328,7 +661,89 @@ void SlimKTX2::writeDFD(IOHandle _file) const
 	};
 }
 
-void ux3d::slimktx2::SlimKTX2::destoryMipLevelArray()
+void SlimKTX2::destroyKVD()
+{
+	auto* pEntry = m_kvd.pKeyValues;
+	while (pEntry != nullptr)
+	{
+		auto* pNext = pEntry->pNext;
+		pEntry->pNext = nullptr;
+
+		if (pEntry->pKeyValue != nullptr)
+		{
+			free(pEntry->pKeyValue);
+			pEntry->pKeyValue = nullptr;
+		}
+
+		free(pEntry);
+		pEntry = pNext;
+	};
+	m_kvd.pKeyValues = nullptr;
+}
+
+bool SlimKTX2::readKVD(IOHandle _file)
+{
+	destroyKVD();
+
+	uint32_t remainingSize = m_sections.kvdByteLength;
+
+	auto* pEntry = m_kvd.pKeyValues;
+	while (remainingSize >= sizeof(uint32_t) + 2u) // minimum entry size 
+	{
+		auto* pNew = allocateArray<KeyValueData::Entry>();
+
+		if (pEntry != nullptr)
+		{
+			pEntry->pNext = pNew;
+		}
+		else
+		{
+			m_kvd.pKeyValues = pNew;
+		}
+
+		if (read(_file, &pNew->keyAndValueByteLength) == false)
+		{
+			return false;
+		}
+
+		remainingSize -= sizeof(uint32_t);
+		remainingSize -= pNew->keyAndValueByteLength;
+
+		pNew->pKeyValue = allocateArray<uint8_t>(pNew->keyAndValueByteLength);
+		if (read(_file, pNew->pKeyValue, pNew->keyAndValueByteLength) == false)
+		{
+			return false;
+		}
+
+		const uint32_t padding = getPadding(pNew->keyAndValueByteLength, 4u);
+		if (padding != 0u)
+		{
+			auto pos = tell(_file);
+			seek(_file, pos + padding);
+			remainingSize -= padding;		
+		}
+	}
+
+	return remainingSize == 0u;
+}
+
+void SlimKTX2::writeKVD(IOHandle _file) const
+{
+	auto* pEntry = m_kvd.pKeyValues;
+	while (pEntry != nullptr)
+	{
+		write(_file, &pEntry->keyAndValueByteLength);
+		if (pEntry->pKeyValue != nullptr && pEntry->keyAndValueByteLength > 0u)
+		{
+			write(_file, pEntry->pKeyValue, pEntry->keyAndValueByteLength);
+			const uint32_t padding = getPadding(pEntry->keyAndValueByteLength, 4u);
+			writePadding(_file, padding);
+		}
+		pEntry = pEntry->pNext;
+	};
+}
+
+void SlimKTX2::destoryMipLevelArray()
 {
 	if (m_pMipLevelArray != nullptr)
 	{
@@ -1340,48 +755,4 @@ void ux3d::slimktx2::SlimKTX2::destoryMipLevelArray()
 		free(m_pMipLevelArray);
 		m_pMipLevelArray = nullptr;
 	}
-}
-
-DataFormatDesc::BlockHeader::BlockHeader() :
-	vendorId(0u), // KHR
-	type(0u), // basicformat
-	versionNumber(2u), // v1.3
-	blockSize(blockHeaderSize),
-	colorModel(0u), // unspecified
-	colorPrimaries(0u), // unspecified
-	transferFunction(1u), // linear
-	flags(0u), // alpha straight
-	texelBlockDimension0(0u),
-	texelBlockDimension1(0u),
-	texelBlockDimension2(0u),
-	texelBlockDimension3(0u),
-	bytesPlane0(0u),
-	bytesPlane1(0u),
-	bytesPlane2(0u),
-	bytesPlane3(0u),
-	bytesPlane4(0u),
-	bytesPlane5(0u),
-	bytesPlane6(0u),
-	bytesPlane7(0u)
-{
-}
-
-uint32_t DataFormatDesc::computeSize() const
-{
-	size_t size = 0u; // totalSize member ignored
-
-	const Block* pBlock = pBlocks;
-	while (pBlock != nullptr)
-	{
-		size += blockHeaderSize;
-
-		if (pBlock->pSamples != nullptr)
-		{
-			size += static_cast<uint64_t>(pBlock->getSampleCount()) * sampleSize;
-		}
-
-		pBlock = pBlock->pNext;
-	};
-
-	return static_cast<uint32_t>(size);
 }
