@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdarg.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdarg>
 #include <new>
 
 #include "dfd.h"
