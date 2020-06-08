@@ -11,11 +11,19 @@
 #include "kvd.h"
 #include "callbacks.h"
 #include "format.h"
+#include "basislz.h"
 
 namespace ux3d
 {
 	namespace slimktx2
 	{
+		enum class SupercompressionScheme : uint32_t
+		{
+			None = 0,
+			BasisLZ = 1,
+			Zstandard = 2
+		};
+
 		// dont use enum class to allow converssion to uint32_t
 		enum class CubeMapFace : uint32_t
 		{
@@ -81,7 +89,8 @@ namespace ux3d
 			LevelIndexNotAllocated,
 			MipLevelArryNotAllocated,
 			DataFormatDescNotAllocated,
-			KeyValueDataNotAllocated
+			KeyValueDataNotAllocated,
+			SupercompressionGlobalDataNotAllocated
 		};
 
 		// Serialization API:
@@ -118,7 +127,7 @@ namespace ux3d
 			const KeyValueData& getKVD() const;
 
 			// fills header and locks format/data-layout for addImage
-			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 0u, uint32_t _layerCount = 0u);
+			Result specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount = 1u, uint32_t _faceCount = 1u, uint32_t _depth = 0u, uint32_t _layerCount = 0u, SupercompressionScheme _scheme = SupercompressionScheme::None);
 
 			void addDFDBlock(const DataFormatDesc::BlockHeader& _header, const DataFormatDesc::Sample* _pSamples = nullptr, uint32_t _numSamples = 0u);
 
@@ -135,6 +144,9 @@ namespace ux3d
 
 			// returns pointer to face at _level, _layer, _face index, _imageSize is used for validation if _imageSize != 0u
 			Result getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _face, uint32_t _layer, uint64_t _imageSize = 0u) const;
+
+			// number of images in the mip level array
+			uint32_t getImageCount() const;
 
 			// free allocated memory, clear members
 			void clear();
@@ -170,6 +182,10 @@ namespace ux3d
 			bool readKVD(IOHandle _file);
 			void writeKVD(IOHandle _file) const;
 
+			void destroySGD();
+			Result readSGD(IOHandle _file);
+			void writeSGD(IOHandle _file) const;
+
 			void destoryMipLevelArray();
 
 		private:
@@ -183,6 +199,9 @@ namespace ux3d
 
 			DataFormatDesc m_dfd{};
 			KeyValueData m_kvd{};
+
+			//sgd
+			BasisLZ m_basisLZ{};
 
 			// mipLevel array
 			uint8_t** m_pMipLevelArray = nullptr;
