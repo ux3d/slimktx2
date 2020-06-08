@@ -25,5 +25,5 @@ void DefaultConsoleLogCallback::log(void* _pUserData, const char* _pFormat, va_l
 {
 	char buffer[512];
 	vsnprintf(buffer, sizeof(buffer), _pFormat, _args);
-	printf(buffer);
+	printf("%s", buffer);
 }
