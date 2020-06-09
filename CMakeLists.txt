@@ -46,7 +46,7 @@ if(UNIX)
     set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${basisu_lib_dir}/libbasisu.a)
 else()
     # DLL systems
-    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${basisu_lib_dir}/libbasisu.lib)
+    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${basisu_lib_dir}/basisu.lib)
 endif()
 
 add_dependencies(basisu basis_universal)
