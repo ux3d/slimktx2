@@ -24,3 +24,11 @@ add_sources("include/*.h" "slimktx2_sources")
 #lib project
 add_library(${PROJECT_NAME} SHARED ${slimktx2_sources})
 target_include_directories(${PROJECT_NAME} PUBLIC "include")
+
+
+# TODO: make optional
+include(ExternalProject)
+ExternalProject_Add(basisu
+  GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
+  GIT_TAG           a36ba85eaaba88ea5207176d2e3eea3cbca2e713
+)
