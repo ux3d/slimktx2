@@ -35,23 +35,18 @@ ExternalProject_Add(basis_universal
   GIT_TAG           origin/build_library
   CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
 )
-
 ExternalProject_Get_Property(basis_universal install_dir)
-SET(basisu_include_dir ${install_dir}/include)
-SET(basisu_lib_dir ${install_dir}/lib)
-message(STATUS ${install_dir})
-add_library(basisu STATIC IMPORTED)
 
+add_library(basisu STATIC IMPORTED)
 if(UNIX)
-    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${basisu_lib_dir}/libbasisu.a)
+    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/libbasisu.a)
 else()
     # DLL systems
-    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${basisu_lib_dir}/basisu.lib)
+    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/basisu.lib)
 endif()
-
 add_dependencies(basisu basis_universal)
 
-include_directories(${basisu_include_dir})
+include_directories(${install_dir}/include)
 target_link_libraries(${PROJECT_NAME} basisu)
 add_dependencies(${PROJECT_NAME} basis_universal)
 
