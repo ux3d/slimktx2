@@ -9,6 +9,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+
 #this project
 project(slimktx2)
 
@@ -28,7 +29,18 @@ target_include_directories(${PROJECT_NAME} PUBLIC "include")
 
 # TODO: make optional
 include(ExternalProject)
-ExternalProject_Add(basisu
+ExternalProject_Add(basis_universal
   GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
-  GIT_TAG           a36ba85eaaba88ea5207176d2e3eea3cbca2e713
+  GIT_TAG origin/master
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ENABLE_EXPORTS=TRUE # basis universal needs the configuration set by cmake, which doesn't work with multi configuration generators
 )
+
+SET(BASISU_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/basis_universal-prefix/src/basis-universal)
+SET(BASISU_LIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/basis_universal-prefix/src/basis-universal/bin)
+
+add_executable(basisu IMPORTED)
+set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${BASISU_LIB_DIR}/basisu ENABLE_EXPORTS 1)
+add_dependencies(basisu basis_universal)
+
+target_link_libraries(${PROJECT_NAME} basisu)
+
