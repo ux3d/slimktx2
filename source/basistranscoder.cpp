@@ -2,8 +2,7 @@
 
 #include "basistranscoder.h"
 
-// TODO: update include to own repo
-#include "../../basis_universal/transcoder/basisu_transcoder.h"
+#include <basisu_transcoder.h>
 
 ux3d::slimktx2::BasisTranscoder::BasisTranscoder()
 {
