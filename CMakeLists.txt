@@ -30,19 +30,28 @@ target_include_directories(${PROJECT_NAME} PUBLIC "include")
 # TODO: make optional
 include(ExternalProject)
 ExternalProject_Add(basis_universal
-  PREFIX thirdparty
+  PREFIX thirdparty/basisu
   GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
   GIT_TAG           origin/build_library
-  CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+  CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
 )
 
-SET(BASISU_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/thirdpary/src/basis-universal)
-SET(BASISU_LIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/lib)
+ExternalProject_Get_Property(basis_universal install_dir)
+SET(basisu_include_dir ${install_dir}/src/basis-universal)
+SET(basisu_lib_dir ${install_dir}/lib)
 message(STATUS ${BASISU_LIB_DIR})
 add_library(basisu STATIC IMPORTED)
-set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${BASISU_LIB_DIR}/libbasisu.a)
+
+if(UNIX)
+    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${basisu_lib_dir}/libbasisu.a)
+else()
+    # DLL systems
+    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${basisu_lib_dir}/libbasisu.lib)
+endif()
+
 add_dependencies(basisu basis_universal)
 
+include_directories(${basisu_include_dir})
 target_link_libraries(${PROJECT_NAME} basisu)
 add_dependencies(${PROJECT_NAME} basis_universal)
 
