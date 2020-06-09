@@ -31,7 +31,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "include")
 include(ExternalProject)
 ExternalProject_Add(basis_universal
   GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
-  GIT_TAG           imagetranscoder
+  GIT_TAG           origin/imagetranscoder
   CMAKE_ARGS -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ENABLE_EXPORTS=TRUE # basis universal needs the configuration set by cmake, which doesn't work with multi configuration generators
 )
 
