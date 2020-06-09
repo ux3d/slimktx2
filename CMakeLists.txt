@@ -32,15 +32,15 @@ include(ExternalProject)
 ExternalProject_Add(basis_universal
   PREFIX thirdparty
   GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
-  GIT_TAG           origin/imagetranscoder
-  CMAKE_ARGS -DCMAKE_BUILD_TYPE=Debug -DCMAKE_ENABLE_EXPORTS=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> # basis universal needs the configuration set by cmake, which doesn't work with multi configuration generators
+  GIT_TAG           origin/build_library
+  CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
 )
 
 SET(BASISU_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/thirdpary/src/basis-universal)
-SET(BASISU_LIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/bin)
+SET(BASISU_LIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/lib)
 message(STATUS ${BASISU_LIB_DIR})
-add_executable(basisu IMPORTED)
-set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${BASISU_LIB_DIR}/basisu ENABLE_EXPORTS 1)
+add_library(basisu STATIC IMPORTED)
+set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${BASISU_LIB_DIR}/libbasisu.a)
 add_dependencies(basisu basis_universal)
 
 target_link_libraries(${PROJECT_NAME} basisu)
