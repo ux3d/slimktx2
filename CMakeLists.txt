@@ -37,7 +37,7 @@ ExternalProject_Add(basis_universal
 )
 
 ExternalProject_Get_Property(basis_universal install_dir)
-SET(basisu_include_dir ${install_dir}/src/basis_universal)
+SET(basisu_include_dir ${install_dir}/include)
 SET(basisu_lib_dir ${install_dir}/lib)
 message(STATUS ${install_dir})
 add_library(basisu STATIC IMPORTED)
