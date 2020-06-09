@@ -107,6 +107,8 @@ namespace ux3d
 
 		class SlimKTX2
 		{
+			friend class BasisTranscoder; // forward decl
+
 		public:
 			SlimKTX2() = default;
 			SlimKTX2(const Callbacks& _callbacks);
