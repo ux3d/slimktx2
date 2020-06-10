@@ -1,8 +1,11 @@
 ﻿// Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #include "slimktx2.h"
-#include "basistranscoder.h"
 #include <cstring>
+
+#ifdef SLIMKTX2_USE_BASISU
+#include "basistranscoder.h"
+#endif
 
 using namespace ux3d::slimktx2;
 
@@ -147,11 +150,16 @@ Result SlimKTX2::parse(IOHandle _file)
 
 	if (m_header.supercompressionScheme == static_cast<uint32_t>(SupercompressionScheme::BasisLZ))
 	{
+#ifdef SLIMKTX2_USE_BASISU
 		BasisTranscoder bit;
 		if (bit.transcode(*this, _file) == false)
 		{
 			return Result::BasisTranscodeFailed;
 		}
+#else
+		log("slimktx2 not compiled with basisu support\n");
+		return Result::UnknownFormat;
+#endif
 	}
 	else if (m_header.vkFormat != Format::UNDEFINED)
 	{
