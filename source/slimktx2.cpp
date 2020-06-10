@@ -145,38 +145,42 @@ Result SlimKTX2::parse(IOHandle _file)
 		}
 	}
 
-	res = allocateMipLevelArray();
-
-	if (res != Result::Success)
-	{
-		return res;
-	}
-
 	if (m_header.supercompressionScheme == static_cast<uint32_t>(SupercompressionScheme::BasisLZ))
 	{
 		BasisTranscoder bit;
 		if (bit.transcode(*this, _file) == false)
 		{
-		
+			return Result::BasisTranscodeFailed;
 		}
 	}
-
-	// TODO: decompress if supercompressed
-
-	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
+	else if (m_header.vkFormat != Format::UNDEFINED)
 	{
-		const LevelIndex& lvl = m_pLevels[level];
-
-		// skip to first level
-		if (seek(_file, lvl.byteOffset) == false)
+		res = allocateMipLevelArray();
+		if (res != Result::Success)
 		{
-			return Result::IOReadFail;
+			return res;
 		}
 
-		if (read(_file, m_pMipLevelArray[level], lvl.byteLength) == false)
+		for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 		{
-			return Result::IOReadFail;
+			const LevelIndex& lvl = m_pLevels[level];
+
+			// skip to first level
+			if (seek(_file, lvl.byteOffset) == false)
+			{
+				return Result::IOReadFail;
+			}
+
+			if (read(_file, m_pMipLevelArray[level], lvl.byteLength) == false)
+			{
+				return Result::IOReadFail;
+			}
 		}
+	}
+	else
+	{
+		log("vkFormat not specified\n");
+		return Result::UnknownFormat;
 	}
 
 	return Result::Success;
@@ -477,6 +481,11 @@ Result SlimKTX2::allocateMipLevelArray()
 	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 
 	const auto levelCount = getLevelCount();
+
+	if (pixelSize == 0 || levelCount == 0)
+	{
+		return Result::MipLevelArryNotAllocated;
+	}
 
 	m_pMipLevelArray = allocateArray<uint8_t*>(levelCount);
 

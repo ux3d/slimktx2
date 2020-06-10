@@ -90,7 +90,9 @@ namespace ux3d
 			MipLevelArryNotAllocated,
 			DataFormatDescNotAllocated,
 			KeyValueDataNotAllocated,
-			SupercompressionGlobalDataNotAllocated
+			SupercompressionGlobalDataNotAllocated,
+			BasisTranscodeFailed,
+			UnknownFormat
 		};
 
 		// Serialization API:

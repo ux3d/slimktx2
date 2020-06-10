@@ -39,6 +39,41 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
 
     bit.decode_tables(_image.m_basisLZ.pTables, header.tablesByteLength);
 
+    // TODO: update ktx header with decoded vk format to be able to allocate the right amount of memory
+
+    if (_image.allocateMipLevelArray() != Result::Success)
+    {
+        return false;
+    }
+
+    const uint32_t levelCount = _image.getLevelCount();
+
+    for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
+    {
+        const LevelIndex& lvl = _image.m_pLevels[level];
+
+        // skip to first level
+        if (_image.seek(_file, lvl.byteOffset) == false)
+        {
+            return false;
+        }
+
+        //if (_image.read(_file, _image.m_pMipLevelArray[level], lvl.byteLength) == false)
+        //{
+        //    return false;
+        //}
+    }
+
+    //uint32_t layerPixelDepth = max(_image.m_header.pixelDepth, 1u);
+    //for (uint32_t i = 1; i < m_header.levelCount; ++i)
+    //{
+    //    layerPixelDepth += max(m_header.pixelDepth >> i, 1u);
+    //}
+
+    //return max(m_header.layerCount, 1u) * m_header.faceCount * layerPixelDepth;
+    
+    // TODO: update DFD with new color model
+
 	return false;
 }
 
