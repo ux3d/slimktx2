@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #include "slimktx2.h"
+#include "basistranscoder.h"
 #include <cstring>
 
 using namespace ux3d::slimktx2;
@@ -149,6 +150,15 @@ Result SlimKTX2::parse(IOHandle _file)
 	if (res != Result::Success)
 	{
 		return res;
+	}
+
+	if (m_header.supercompressionScheme == static_cast<uint32_t>(SupercompressionScheme::BasisLZ))
+	{
+		BasisTranscoder bit;
+		if (bit.transcode(*this, _file) == false)
+		{
+		
+		}
 	}
 
 	// TODO: decompress if supercompressed
