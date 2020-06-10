@@ -13,18 +13,42 @@ option(SLIMKTX2_USE_BASISU "use basis_universal to decode compressed ktx2 data" 
 #this project
 project(slimktx2)
 
-macro(add_sources expression sources)
-	file(GLOB source_files RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "${expression}")
-	set(${sources} "${${sources}};${source_files}")
-endmacro()
-
 #lib sources
-add_sources("source/*.cpp" "slimktx2_sources")
-add_sources("include/*.h" "slimktx2_sources")
+set(slimktx2_sources
+    source/DefaultAllocationCallback.cpp
+    source/DefaultConsoleLogCallback.cpp
+    source/DefaultFileIOCallback.cpp
+    source/DefaultMemoryStreamCallback.cpp
+    source/dfd.cpp
+    source/format.cpp
+    source/kvd.cpp
+    source/slimktx2.cpp
+    )
+
+set(slimktx2_public_headers
+    include/DefaultAllocationCallback.h
+    include/DefaultConsoleLogCallback.h
+    include/DefaultFileIOCallback.h
+    include/DefaultMemoryStreamCallback.h
+    include/basislz.h
+    include/callbacks.h
+    include/dfd.h
+    include/format.h
+    include/kvd.h
+    include/slimktx2.h
+    )
+
+if(SLIMKTX2_USE_BASISU)
+    set(slimktx2_sources ${slimktx2_sources}
+        source/basistranscoder.cpp
+        source/basistranscoder.h
+        )
+endif()
+
 
 #lib project
-add_library(${PROJECT_NAME} SHARED ${slimktx2_sources})
-target_include_directories(${PROJECT_NAME} PUBLIC "include")
+add_library(${PROJECT_NAME} SHARED ${slimktx2_sources} ${slimktx2_public_headers})
+target_include_directories(${PROJECT_NAME} PUBLIC "include" PRIVATE "source")
 
 
 if(SLIMKTX2_USE_BASISU)
@@ -39,6 +63,7 @@ if(SLIMKTX2_USE_BASISU)
     )
     ExternalProject_Get_Property(basis_universal install_dir)
 
+    # provide an imported target for basisu
     add_library(basisu STATIC IMPORTED)
     if(UNIX)
         set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/libbasisu.a)
@@ -50,6 +75,5 @@ if(SLIMKTX2_USE_BASISU)
 
     include_directories(${install_dir}/include)
     target_link_libraries(${PROJECT_NAME} basisu)
-    add_dependencies(${PROJECT_NAME} basis_universal)
 endif()
 
