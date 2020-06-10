@@ -15,8 +15,8 @@ ux3d::slimktx2::BasisTranscoder::~BasisTranscoder()
 
 bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat)
 {
-    _targetFormat = TranscodeFormat::ETC1_RGB; // TODO: remove, for debugging only
-
+    //_targetFormat = TranscodeFormat::ETC1_RGB; // TODO: remove, for debugging only
+    _targetFormat = TranscodeFormat::RGBA32;
     if (_targetFormat == TranscodeFormat::UNDEFINED)
     {
         return false;
@@ -118,7 +118,6 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
         return false;
     }
 
-    //for (uint32_t level = levelCount - 1u, image = 0u; level <= levelCount; --level)
     for(uint32_t level = 0u, image = 0u; level < levelCount; ++level)
     {
         const LevelIndex& lvl = _image.m_pLevels[level];
@@ -171,6 +170,6 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
     
     // TODO: update DFD with new color model
 
-	return false;
+	return true;
 }
 
