@@ -11,18 +11,6 @@ using namespace ux3d::slimktx2;
 
 const uint8_t Header::Magic[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
 
-template <class T>
-T max(T x, T y) { return x > y ? x : y; }
-
-template <class T>
-T max(T x, T y, T z) { return max(max(x,y),z); }
-
-template <class T>
-T min(T x, T y) { return x < y ? x : y; }
-
-template <class T>
-T min(T x, T y, T z) { return min(min(x, y), z); }
-
 SlimKTX2::SlimKTX2(const Callbacks& _callbacks) : m_callbacks(_callbacks)
 {
 }
