@@ -15,6 +15,19 @@ ux3d::slimktx2::BasisTranscoder::~BasisTranscoder()
 
 bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file)
 {
+    auto* pBlock = _image.getDFD().pBlocks;
+
+    if (pBlock == nullptr)
+    {
+        return false;
+    }
+
+    // currently only work with ETC1S
+    if (pBlock->header.colorModel != ColorModel_ETC1S)
+    {
+        return false;
+    }
+
     static basist::etc1_global_selector_codebook sel_codebook(basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 
     basist::basisu_etc1s_image_transcoder bit(&sel_codebook);
