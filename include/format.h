@@ -164,7 +164,73 @@ namespace ux3d
 			R64G64B64_SFLOAT = 118,
 			R64G64B64A64_UINT = 119,
 			R64G64B64A64_SINT = 120,
-			R64G64B64A64_SFLOAT = 121
+			R64G64B64A64_SFLOAT = 121,
+
+			// compressed
+			BC1_RGB_UNORM_BLOCK = 131,
+			BC1_RGB_SRGB_BLOCK = 132,
+			BC1_RGBA_UNORM_BLOCK = 133,
+			BC1_RGBA_SRGB_BLOCK = 134,
+			BC2_UNORM_BLOCK = 135,
+			BC2_SRGB_BLOCK = 136,
+			BC3_UNORM_BLOCK = 137,
+			BC3_SRGB_BLOCK = 138,
+			BC4_UNORM_BLOCK = 139,
+			BC4_SNORM_BLOCK = 140,
+			BC5_UNORM_BLOCK = 141,
+			BC5_SNORM_BLOCK = 142,
+			BC6H_UFLOAT_BLOCK = 143,
+			BC6H_SFLOAT_BLOCK = 144,
+			BC7_UNORM_BLOCK = 145,
+			BC7_SRGB_BLOCK = 146,
+			ETC2_R8G8B8_UNORM_BLOCK = 147,
+			ETC2_R8G8B8_SRGB_BLOCK = 148,
+			ETC2_R8G8B8A1_UNORM_BLOCK = 149,
+			ETC2_R8G8B8A1_SRGB_BLOCK = 150,
+			ETC2_R8G8B8A8_UNORM_BLOCK = 151,
+			ETC2_R8G8B8A8_SRGB_BLOCK = 152,
+
+			EAC_R11_UNORM_BLOCK = 153,
+			EAC_R11_SNORM_BLOCK = 154,
+			EAC_R11G11_UNORM_BLOCK = 155,
+			EAC_R11G11_SNORM_BLOCK = 156,
+
+			ASTC_4x4_UNORM_BLOCK = 157,
+			ASTC_4x4_SRGB_BLOCK = 158,
+
+			PVRTC1_2BPP_UNORM_BLOCK_IMG = 1000054000,
+			PVRTC1_4BPP_UNORM_BLOCK_IMG = 1000054001,
+			PVRTC2_2BPP_UNORM_BLOCK_IMG = 1000054002,
+			PVRTC2_4BPP_UNORM_BLOCK_IMG = 1000054003,
+			PVRTC1_2BPP_SRGB_BLOCK_IMG = 1000054004,
+			PVRTC1_4BPP_SRGB_BLOCK_IMG = 1000054005,
+			PVRTC2_2BPP_SRGB_BLOCK_IMG = 1000054006,
+			PVRTC2_4BPP_SRGB_BLOCK_IMG = 1000054007,
+		};
+
+		// ktx_transcode_fmt_e
+		enum class TranscodeFormat
+		{
+			ETC1_RGB = 0,
+			ETC2_RGBA = 1,
+			BC1_RGB = 2,
+			BC3_RGBA = 3,
+			BC4_R = 4,
+			BC5_RG = 5,
+			BC7_RGBA = 6,
+			PVRTC1_4_RGB = 8,
+			PVRTC1_4_RGBA = 9,
+			ASTC_4x4_RGBA = 10,
+			PVRTC2_4_RGB = 18,
+			PVRTC2_4_RGBA = 19,
+			ETC2_EAC_R11 = 20,
+			ETC2_EAC_RG11 = 21,
+			RGBA32 = 13,
+			RGB565 = 14,
+			BGR565 = 15,
+			RGBA4444 = 16,
+			//ETC = 22, // Automatically selects @c ETC1_RGB or @c ETC2_RGBA according to presence of alpha. 
+			//BC1_OR_3 = 23, //Automatically selects @c BC1_RGB or @c BC3_RGBA according to presence of alpha.
 		};
 
 		// as defined by KTX (channel size)
@@ -203,5 +269,7 @@ namespace ux3d
 
 		// _value / offset to apply lcm4 padding to (if applicable)
 		uint32_t getMipPadding(uint64_t _value, Format _vkFormat, bool _superCompression);
+
+		Format transcodeToVkFormat(TranscodeFormat _format, bool _sRGB);
 	}// !slimktx2
 } // ux3d

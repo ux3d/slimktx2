@@ -985,3 +985,50 @@ uint32_t ux3d::slimktx2::getMipPadding(uint64_t _value, ux3d::slimktx2::Format _
 	const uint32_t padding = getPadding(_value, lcm);
 	return padding;
 }
+
+ux3d::slimktx2::Format ux3d::slimktx2::transcodeToVkFormat(TranscodeFormat _format, bool _sRGB)
+{
+	switch (_format)
+	{
+	case TranscodeFormat::ETC1_RGB:
+		return _sRGB ? Format::ETC2_R8G8B8_SRGB_BLOCK : Format::ETC2_R8G8B8_UNORM_BLOCK;
+	case TranscodeFormat::ETC2_RGBA:
+		return _sRGB ? Format::ETC2_R8G8B8A8_SRGB_BLOCK : Format::ETC2_R8G8B8A8_UNORM_BLOCK;
+	case TranscodeFormat::BC1_RGB:
+		return _sRGB ? Format::BC1_RGB_SRGB_BLOCK : Format::BC1_RGB_UNORM_BLOCK;
+	case TranscodeFormat::BC3_RGBA:
+		return _sRGB ? Format::BC3_SRGB_BLOCK : Format::BC3_UNORM_BLOCK;
+	case TranscodeFormat::BC4_R:
+		return Format::BC4_UNORM_BLOCK;
+	case TranscodeFormat::BC5_RG:
+		return Format::BC5_UNORM_BLOCK;
+	case TranscodeFormat::BC7_RGBA:
+		return _sRGB ? Format::BC7_SRGB_BLOCK : Format::BC7_UNORM_BLOCK;
+	case TranscodeFormat::PVRTC1_4_RGB:
+	case TranscodeFormat::PVRTC1_4_RGBA:
+		return _sRGB ? Format::PVRTC1_4BPP_SRGB_BLOCK_IMG : Format::PVRTC1_4BPP_UNORM_BLOCK_IMG;
+	case TranscodeFormat::ASTC_4x4_RGBA:
+		return _sRGB ? Format::ASTC_4x4_SRGB_BLOCK : Format::ASTC_4x4_UNORM_BLOCK;
+	case TranscodeFormat::PVRTC2_4_RGB:
+	case TranscodeFormat::PVRTC2_4_RGBA:
+		return _sRGB ? Format::PVRTC2_4BPP_SRGB_BLOCK_IMG : Format::PVRTC2_4BPP_UNORM_BLOCK_IMG;
+	case TranscodeFormat::ETC2_EAC_R11:
+		return Format::EAC_R11_UNORM_BLOCK;
+	case TranscodeFormat::ETC2_EAC_RG11:
+		return Format::EAC_R11G11_UNORM_BLOCK;
+	case TranscodeFormat::RGBA32:
+		return _sRGB ? Format::R8G8B8A8_SRGB : Format::R8G8B8A8_UNORM;
+	case TranscodeFormat::RGB565:
+		return Format::R5G6B5_UNORM_PACK16;
+	case TranscodeFormat::BGR565:
+		return Format::B5G6R5_UNORM_PACK16;
+	case TranscodeFormat::RGBA4444:
+		return Format::R4G4B4A4_UNORM_PACK16;
+	//case TranscodeFormat::ETC:
+	//	break;
+	//case TranscodeFormat::BC1_OR_3:
+	//	break;
+	default:
+		return Format::UNDEFINED;
+	}
+}
