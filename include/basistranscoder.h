@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "callbacks.h"
+
 namespace ux3d
 {
 	namespace slimktx2
@@ -15,7 +17,7 @@ namespace ux3d
 			BasisTranscoder();
 			~BasisTranscoder();
 
-			bool transcode(SlimKTX2& _image);
+			bool transcode(SlimKTX2& _image, IOHandle _file);
 
 		private:
 
