@@ -35,6 +35,7 @@ namespace ux3d
 			VersionNumber_MAX = 0xFFFFU
 		};
 
+        // khr_df_model_e
 		enum ColorModel : uint8_t
 		{
             ColorModel_UNSPECIFIED = 0U,
@@ -78,6 +79,7 @@ namespace ux3d
 			ColorModel_MAX = 0xFFU
 		};
 
+        // khr_df_model_channels_e
         enum ColorChannels : uint8_t
         {
             ColorChannels_UNSPECIFIED_0 = 0U,
@@ -255,14 +257,22 @@ namespace ux3d
 
             ColorChannels_ASTC_DATA = 0U,
 
-            ColorChannels_ETC1S_DATA = 0U,
-            ColorChannels_ETC1S_COLOR = 0U,
+            ColorChannels_ETC1S_RGB = 0U,
+            ColorChannels_ETC1S_RRR = 3U,
+            ColorChannels_ETC1S_GGG = 4U,
+            ColorChannels_ETC1S_AAA = 15U,
 
             ColorChannels_PVRTC_DATA = 0U,
             ColorChannels_PVRTC_COLOR = 0U,
 
             ColorChannels_PVRTC2_DATA = 0U,
             ColorChannels_PVRTC2_COLOR = 0U,
+
+            ColorChannels_UASTC_DATA = 0U,
+            ColorChannels_UASTC_RGB = 0U,
+            ColorChannels_UASTC_RGBA = 3U,
+            ColorChannels_UASTC_RRR = 4U,
+            ColorChannels_UASTC_RRRG = 5U,
 
             ColorChannels_COMMON_LUMA = 0U,
             ColorChannels_COMMON_L = 0U,
