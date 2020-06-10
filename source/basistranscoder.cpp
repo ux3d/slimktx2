@@ -13,7 +13,7 @@ ux3d::slimktx2::BasisTranscoder::~BasisTranscoder()
 {
 }
 
-bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file)
+bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat)
 {
     auto* pBlock = _image.getDFD().pBlocks;
 
@@ -59,6 +59,9 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
         }
     }
 
+    // update ktx header with decoded vk format to be able to allocate the right amount of memory
+    _image.m_header.vkFormat = transcodeToVkFormat(_targetFormat, sRGB);
+
     // TODO: check for UASTC
 
     //assert(colorModel == KHR_DF_MODEL_UASTC);
@@ -79,7 +82,7 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
 
     bit.decode_tables(_image.m_basisLZ.pTables, header.tablesByteLength);
 
-    // TODO: update ktx header with decoded vk format to be able to allocate the right amount of memory
+    
 
     if (_image.allocateMipLevelArray() != Result::Success)
     {

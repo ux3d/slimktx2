@@ -209,7 +209,7 @@ namespace ux3d
 		};
 
 		// ktx_transcode_fmt_e
-		enum class TranscodeFormat
+		enum class TranscodeFormat : uint32_t
 		{
 			ETC1_RGB = 0,
 			ETC2_RGBA = 1,
@@ -231,6 +231,8 @@ namespace ux3d
 			RGBA4444 = 16,
 			//ETC = 22, // Automatically selects @c ETC1_RGB or @c ETC2_RGBA according to presence of alpha. 
 			//BC1_OR_3 = 23, //Automatically selects @c BC1_RGB or @c BC3_RGBA according to presence of alpha.
+
+			UNDEFINED = ~0u
 		};
 
 		// as defined by KTX (channel size)

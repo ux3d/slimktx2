@@ -3,6 +3,7 @@
 #pragma once
 
 #include "callbacks.h"
+#include "format.h"
 
 namespace ux3d
 {
@@ -17,7 +18,7 @@ namespace ux3d
 			BasisTranscoder();
 			~BasisTranscoder();
 
-			bool transcode(SlimKTX2& _image, IOHandle _file);
+			bool transcode(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat);
 
 		private:
 

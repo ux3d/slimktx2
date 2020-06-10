@@ -118,7 +118,7 @@ namespace ux3d
 
 			void setCallbacks(const Callbacks& _callbacks);
 
-			Result parse(IOHandle _file);
+			Result parse(IOHandle _file, TranscodeFormat _targetFormat = TranscodeFormat::UNDEFINED);
 
 			Result serialize(IOHandle _file);
 

@@ -81,7 +81,7 @@ uint64_t SlimKTX2::getFaceImageOffset(uint32_t _level, uint32_t _face, uint32_t 
 	return offset;
 }
 
-Result SlimKTX2::parse(IOHandle _file)
+Result SlimKTX2::parse(IOHandle _file, TranscodeFormat _targetFormat)
 {
 	clear();
 
@@ -152,7 +152,7 @@ Result SlimKTX2::parse(IOHandle _file)
 	{
 #ifdef SLIMKTX2_USE_BASISU
 		BasisTranscoder bit;
-		if (bit.transcode(*this, _file) == false)
+		if (bit.transcode(*this, _file, _targetFormat) == false)
 		{
 			return Result::BasisTranscodeFailed;
 		}
@@ -220,7 +220,9 @@ Result SlimKTX2::serialize(IOHandle _file)
 		return Result::KeyValueDataNotAllocated;
 	}
 
-	if (m_basisLZ.pImageDescs == nullptr && m_header.supercompressionScheme == static_cast<uint32_t>(SupercompressionScheme::BasisLZ))
+	const bool isBasis = m_header.supercompressionScheme == static_cast<uint32_t>(SupercompressionScheme::BasisLZ);
+
+	if (m_basisLZ.pImageDescs == nullptr && isBasis)
 	{
 		log("SGD not specified\n");
 		return Result::SupercompressionGlobalDataNotAllocated;
@@ -261,7 +263,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 		// absolute levelOffset within the file
 		m_pLevels[level].byteOffset = levelOffset;
 		m_pLevels[level].byteLength = levelSize;
-		m_pLevels[level].uncompressedByteLength = levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
+		m_pLevels[level].uncompressedByteLength = isBasis ? 0u : levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
 
 		levelOffset += levelSize;
 	}
