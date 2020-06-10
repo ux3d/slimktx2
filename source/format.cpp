@@ -23,6 +23,10 @@ uint32_t ux3d::slimktx2::getTypeSize(ux3d::slimktx2::Format _vkFormat)
 	{
 		return 8u;
 	}
+	else if (_vkFormat >= Format::BC1_RGB_UNORM_BLOCK && _vkFormat <= Format::PVRTC2_4BPP_SRGB_BLOCK_IMG)
+	{
+		return 1u; // "For formats whose Vulkan names have the suffix _BLOCK it must equal 1"
+	}
 
 	// TODO: Implement depth/stencil formats
 
