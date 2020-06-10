@@ -15,6 +15,8 @@ ux3d::slimktx2::BasisTranscoder::~BasisTranscoder()
 
 bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat)
 {
+    _targetFormat = TranscodeFormat::ETC1_RGB; // TODO: remove, for debugging only
+
     if (_targetFormat == TranscodeFormat::UNDEFINED)
     {
         return false;
@@ -107,16 +109,17 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
     const Header& ktx = _image.getHeader();
     const uint32_t levelCount = _image.getLevelCount();
     const uint32_t faceCount = _image.getFaceCount();
-    const uint32_t layerCount = _image.getFaceCount();
+    const uint32_t layerCount = _image.getLayerCount();
 
-    const LevelIndex& baseLevel = _image.m_pLevels[levelCount - 1u];
+    const LevelIndex& baseLevel = _image.m_pLevels[0u];
     uint8_t* pLevelData = _image.allocateArray<uint8_t>(baseLevel.byteLength);
     if (pLevelData == nullptr)
     {
         return false;
     }
 
-    for (uint32_t level = levelCount - 1u, image = 0u; level <= levelCount; --level)
+    //for (uint32_t level = levelCount - 1u, image = 0u; level <= levelCount; --level)
+    for(uint32_t level = 0u, image = 0u; level < levelCount; ++level)
     {
         const LevelIndex& lvl = _image.m_pLevels[level];
 
