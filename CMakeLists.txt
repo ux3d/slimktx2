@@ -5,10 +5,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# options
+option(SLIMKTX2_USE_BASISU "use basis_universal to decode compressed ktx2 data" TRUE)
 
 #this project
 project(slimktx2)
@@ -27,26 +27,29 @@ add_library(${PROJECT_NAME} SHARED ${slimktx2_sources})
 target_include_directories(${PROJECT_NAME} PUBLIC "include")
 
 
-# TODO: make optional
-include(ExternalProject)
-ExternalProject_Add(basis_universal
-  PREFIX thirdparty/basisu
-  GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
-  GIT_TAG           origin/build_library
-  CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-)
-ExternalProject_Get_Property(basis_universal install_dir)
+if(SLIMKTX2_USE_BASISU)
+    add_definitions(-DSLIMKTX2_USE_BASISU)
 
-add_library(basisu STATIC IMPORTED)
-if(UNIX)
-    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/libbasisu.a)
-else()
-    # DLL systems
-    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/basisu.lib)
+    include(ExternalProject)
+    ExternalProject_Add(basis_universal
+      PREFIX thirdparty/basisu
+      GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
+      GIT_TAG           origin/build_library
+      CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+    )
+    ExternalProject_Get_Property(basis_universal install_dir)
+
+    add_library(basisu STATIC IMPORTED)
+    if(UNIX)
+        set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/libbasisu.a)
+    else()
+        # DLL systems
+        set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/basisu.lib)
+    endif()
+    add_dependencies(basisu basis_universal)
+
+    include_directories(${install_dir}/include)
+    target_link_libraries(${PROJECT_NAME} basisu)
+    add_dependencies(${PROJECT_NAME} basis_universal)
 endif()
-add_dependencies(basisu basis_universal)
-
-include_directories(${install_dir}/include)
-target_link_libraries(${PROJECT_NAME} basisu)
-add_dependencies(${PROJECT_NAME} basis_universal)
 
