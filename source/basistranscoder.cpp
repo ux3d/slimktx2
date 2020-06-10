@@ -28,6 +28,46 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
         return false;
     }
 
+    // from libktx:
+    //ktxTexture2_TranscodeBasis(ktxTexture2* This,
+    //ktx_transcode_fmt_e outputFormat,
+    //    ktx_transcode_flags transcodeFlags)
+
+    const bool sRGB = pBlock->header.transferFunction == TransferFunction_SRGB;
+
+    enum alpha_content_e {
+        eNone,
+        eAlpha,
+        eGreen
+    };
+
+    alpha_content_e alphaContent = eNone;
+
+    if (pBlock->getSampleCount() == 2)
+    {
+        if (pBlock->pSamples[1].channelType == ColorChannels_ETC1S_AAA)
+        {
+            alphaContent = eAlpha;
+        }
+        else if (pBlock->pSamples[1].channelType == ColorChannels_ETC1S_GGG)
+        {
+            alphaContent = eGreen;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    // TODO: check for UASTC
+
+    //assert(colorModel == KHR_DF_MODEL_UASTC);
+    //uint32_t channelId = KHR_DFDSVAL(BDB, 0, CHANNELID);
+    //if (channelId == KHR_DF_CHANNEL_UASTC_RGBA)
+    //    alphaContent = eAlpha;
+    //else if (channelId == KHR_DF_CHANNEL_UASTC_RRRG)
+    //    alphaContent = eGreen;
+
     static basist::etc1_global_selector_codebook sel_codebook(basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 
     basist::basisu_etc1s_image_transcoder bit(&sel_codebook);
