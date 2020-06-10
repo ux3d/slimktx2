@@ -7,11 +7,14 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+
 # options
 option(SLIMKTX2_USE_BASISU "use basis_universal to decode compressed ktx2 data" TRUE)
 
+
 #this project
 project(slimktx2)
+
 
 #lib sources
 set(slimktx2_sources
@@ -24,7 +27,6 @@ set(slimktx2_sources
     source/kvd.cpp
     source/slimktx2.cpp
     )
-
 set(slimktx2_public_headers
     include/DefaultAllocationCallback.h
     include/DefaultConsoleLogCallback.h
@@ -37,7 +39,6 @@ set(slimktx2_public_headers
     include/kvd.h
     include/slimktx2.h
     )
-
 if(SLIMKTX2_USE_BASISU)
     set(slimktx2_sources ${slimktx2_sources}
         source/basistranscoder.cpp
@@ -51,9 +52,11 @@ add_library(${PROJECT_NAME} SHARED ${slimktx2_sources} ${slimktx2_public_headers
 target_include_directories(${PROJECT_NAME} PUBLIC "include" PRIVATE "source")
 
 
+# optionally add basis universal
 if(SLIMKTX2_USE_BASISU)
     add_definitions(-DSLIMKTX2_USE_BASISU)
 
+    # use a custom branch of basisu, which allows it being built as library
     include(ExternalProject)
     ExternalProject_Add(basis_universal
       PREFIX thirdparty/basisu
@@ -71,9 +74,12 @@ if(SLIMKTX2_USE_BASISU)
         # DLL systems
         set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/basisu.lib)
     endif()
+    include_directories(${install_dir}/include)
     add_dependencies(basisu basis_universal)
 
-    include_directories(${install_dir}/include)
     target_link_libraries(${PROJECT_NAME} basisu)
 endif()
 
+
+# install target
+install(TARGETS ${PROJECT_NAME})
