@@ -54,6 +54,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "include" PRIVATE "source")
 
 # optionally add basis universal
 if(SLIMKTX2_USE_BASISU)
+    # define the preprocessor definition SLIMKTX2_USE_BASISU
     add_definitions(-DSLIMKTX2_USE_BASISU)
 
     # use a custom branch of basisu, which allows it being built as library
@@ -77,6 +78,7 @@ if(SLIMKTX2_USE_BASISU)
     include_directories(${install_dir}/include)
     add_dependencies(basisu basis_universal)
 
+    # link basisu into slimktx2
     target_link_libraries(${PROJECT_NAME} basisu)
 endif()
 
