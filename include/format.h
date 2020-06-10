@@ -238,8 +238,11 @@ namespace ux3d
 		// as defined by KTX (channel size)
 		uint32_t getTypeSize(Format _vkFormat);
 
-		// as defined by vulkan (pixel size)
-		uint32_t getPixelSize(Format _vkFormat);
+		// as defined by vulkan (element size, block or texel)
+		uint32_t getFormatSize(Format _vkFormat);
+
+		// get number of pixels (widht and hight) per block, returns if format is not BLOCK
+		bool getBlockSize(Format _vkFormat, uint32_t& _outWdith, uint32_t& _outHeight);
 
 		uint32_t getChannelCount(Format _vkFormat);
 
@@ -259,7 +262,7 @@ namespace ux3d
 
 		bool isCompressed(Format _vkFormat);
 
-		uint64_t getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u);
+		uint64_t getFaceSize(Format _vkFormat, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth = 0u);
 
 		// computes the pixel count (resolution) of an image of the given level
 		uint32_t getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth);

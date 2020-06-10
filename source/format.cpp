@@ -1,6 +1,7 @@
 // Copyright (c) 2019 UX3D GmbH. All rights reserved.
 
 #include "format.h"
+#include <cmath>
 
 uint32_t ux3d::slimktx2::getTypeSize(ux3d::slimktx2::Format _vkFormat)
 {
@@ -33,7 +34,7 @@ uint32_t ux3d::slimktx2::getTypeSize(ux3d::slimktx2::Format _vkFormat)
 	return 0u; // invalid
 }
 
-uint32_t ux3d::slimktx2::getPixelSize(ux3d::slimktx2::Format _vkFormat)
+uint32_t ux3d::slimktx2::getFormatSize(ux3d::slimktx2::Format _vkFormat)
 {
 	switch (_vkFormat)
 	{
@@ -172,9 +173,95 @@ uint32_t ux3d::slimktx2::getPixelSize(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64B64A64_SFLOAT:
 		return 32u;
 
+		// TODO: BLOCK FORMATS!
+
 	default:
 		return 0u; // invalid
 	}
+}
+
+bool ux3d::slimktx2::getBlockSize(Format _vkFormat, uint32_t& _outWdith, uint32_t& _outHeight)
+{
+	_outWdith = _outHeight = 1u;
+	switch (_vkFormat)
+	{
+	case Format::BC1_RGB_UNORM_BLOCK:
+		break;
+	case Format::BC1_RGB_SRGB_BLOCK:
+		break;
+	case Format::BC1_RGBA_UNORM_BLOCK:
+		break;
+	case Format::BC1_RGBA_SRGB_BLOCK:
+		break;
+	case Format::BC2_UNORM_BLOCK:
+		break;
+	case Format::BC2_SRGB_BLOCK:
+		break;
+	case Format::BC3_UNORM_BLOCK:
+		break;
+	case Format::BC3_SRGB_BLOCK:
+		break;
+	case Format::BC4_UNORM_BLOCK:
+		break;
+	case Format::BC4_SNORM_BLOCK:
+		break;
+	case Format::BC5_UNORM_BLOCK:
+		break;
+	case Format::BC5_SNORM_BLOCK:
+		break;
+	case Format::BC6H_UFLOAT_BLOCK:
+		break;
+	case Format::BC6H_SFLOAT_BLOCK:
+		break;
+	case Format::BC7_UNORM_BLOCK:
+		break;
+	case Format::BC7_SRGB_BLOCK:
+		break;
+	case Format::ETC2_R8G8B8_UNORM_BLOCK:
+		break;
+	case Format::ETC2_R8G8B8_SRGB_BLOCK:
+		break;
+	case Format::ETC2_R8G8B8A1_UNORM_BLOCK:
+		break;
+	case Format::ETC2_R8G8B8A1_SRGB_BLOCK:
+		break;
+	case Format::ETC2_R8G8B8A8_UNORM_BLOCK:
+		break;
+	case Format::ETC2_R8G8B8A8_SRGB_BLOCK:
+		break;
+	case Format::EAC_R11_UNORM_BLOCK:
+		break;
+	case Format::EAC_R11_SNORM_BLOCK:
+		break;
+	case Format::EAC_R11G11_UNORM_BLOCK:
+		break;
+	case Format::EAC_R11G11_SNORM_BLOCK:
+		break;
+	case Format::ASTC_4x4_UNORM_BLOCK:
+		break;
+	case Format::ASTC_4x4_SRGB_BLOCK:
+		break;
+	case Format::PVRTC1_2BPP_UNORM_BLOCK_IMG:
+		break;
+	case Format::PVRTC1_4BPP_UNORM_BLOCK_IMG:
+		break;
+	case Format::PVRTC2_2BPP_UNORM_BLOCK_IMG:
+		break;
+	case Format::PVRTC2_4BPP_UNORM_BLOCK_IMG:
+		break;
+	case Format::PVRTC1_2BPP_SRGB_BLOCK_IMG:
+		break;
+	case Format::PVRTC1_4BPP_SRGB_BLOCK_IMG:
+		break;
+	case Format::PVRTC2_2BPP_SRGB_BLOCK_IMG:
+		break;
+	case Format::PVRTC2_4BPP_SRGB_BLOCK_IMG:
+		break;
+	default:
+		return false; // not block compressed
+	}
+
+	return true;
 }
 
 uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
@@ -931,13 +1018,32 @@ bool ux3d::slimktx2::isPacked(ux3d::slimktx2::Format _vkFormat)
 
 bool ux3d::slimktx2::isCompressed(ux3d::slimktx2::Format _vkFormat)
 {
-	return false;
+	return _vkFormat >= Format::BC1_RGB_UNORM_BLOCK && _vkFormat <= Format::PVRTC2_4BPP_SRGB_BLOCK_IMG;
 }
 
-uint64_t ux3d::slimktx2::getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
+uint64_t ux3d::slimktx2::getFaceSize(Format _vkFormat, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
 {
-	const uint64_t resolution = getPixelCount(_level, _width, _height, _depth);
-	return resolution * _pixelByteSize;
+	uint32_t blockWidth = 1u;
+	uint32_t blockHeight = 1u;
+
+	const uint32_t bytesPerBlock = getFormatSize(_vkFormat);
+
+	if (getBlockSize(_vkFormat, blockWidth, blockHeight))
+	{
+		const uint32_t width = _width >> _level;
+		const uint32_t height = _height >> _level;
+
+		const uint32_t blockCountX = static_cast<uint32_t>(ceilf(width / static_cast<float>(blockWidth)));
+		const uint32_t blockCountY = static_cast<uint32_t>(ceilf(height / static_cast<float>(blockHeight)));
+
+		return bytesPerBlock * blockCountX * blockCountY;
+	}
+	else
+	{
+		const uint64_t resolution = getPixelCount(_level, _width, _height, _depth);
+
+		return resolution * bytesPerBlock;
+	}
 }
 
 uint32_t ux3d::slimktx2::getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
@@ -984,7 +1090,7 @@ uint32_t ux3d::slimktx2::getMipPadding(uint64_t _value, ux3d::slimktx2::Format _
 		return getPadding(_value, 16u); // 16 byte alignment
 	}
 
-	const uint32_t texelBlockSize = getPixelSize(_vkFormat);
+	const uint32_t texelBlockSize = getFormatSize(_vkFormat);
 	const uint32_t lcm = getLCM(texelBlockSize, 4u);
 	const uint32_t padding = getPadding(_value, lcm);
 	return padding;

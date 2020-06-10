@@ -64,10 +64,8 @@ uint64_t SlimKTX2::getFaceImageOffset(uint32_t _level, uint32_t _face, uint32_t 
 		return 0u;
 	}
 
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-
 	// add largest level
-	const uint64_t faceSize = getFaceSize(pixelSize, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+	const uint64_t faceSize = getFaceSize(m_header.vkFormat, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 
 	// number of previous layers with either 1 or 6 faces
 	uint64_t prevFaces = faceSize * _layer * m_header.faceCount;
@@ -231,7 +229,6 @@ Result SlimKTX2::serialize(IOHandle _file)
 	const size_t streamStart = tell(_file);
 	auto filePos = [&](IOHandle file) -> size_t { return tell(file) - streamStart; };
 
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 	const uint32_t levelCount = getLevelCount();
 
 	const uint32_t dfdByteLength = m_dfd.computeSize();
@@ -256,7 +253,7 @@ Result SlimKTX2::serialize(IOHandle _file)
 		levelOffset += mipPad;
 
 		// start with the small level, fill them in reverse
-		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		uint64_t levelSize = getFaceSize(m_header.vkFormat, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
 
@@ -488,11 +485,9 @@ Result SlimKTX2::allocateMipLevelArray()
 {
 	destoryMipLevelArray();
 
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-
 	const auto levelCount = getLevelCount();
 
-	if (pixelSize == 0 || levelCount == 0)
+	if (levelCount == 0)
 	{
 		return Result::MipLevelArryNotAllocated;
 	}
@@ -506,9 +501,14 @@ Result SlimKTX2::allocateMipLevelArray()
 
 	for (uint32_t l = 0u; l < getLevelCount(); ++l)
 	{
-		uint64_t levelSize = getFaceSize(pixelSize, l, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		uint64_t levelSize = getFaceSize(m_header.vkFormat, l, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
+
+		if (levelSize == 0u)
+		{
+			return Result::MipLevelArryNotAllocated;
+		}
 
 		m_pMipLevelArray[l] = allocateArray<uint8_t>(levelSize);
 		if (m_pMipLevelArray[l] == nullptr)
@@ -529,8 +529,7 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 		return Result::InvalidLevelIndex;
 	}
 
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-	const uint64_t imageSize = getFaceSize(pixelSize, _level,  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+	const uint64_t imageSize = getFaceSize(m_header.vkFormat, _level,  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 
 	if (_byteSize != imageSize)
 	{
@@ -572,7 +571,7 @@ Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _fa
 	if (_imageSize != 0u) 
 	{
 		// for debugging
-		uint64_t levelSize = getFaceSize(getPixelSize(m_header.vkFormat), _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		uint64_t levelSize = getFaceSize(m_header.vkFormat, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
 
