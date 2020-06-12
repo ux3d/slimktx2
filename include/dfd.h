@@ -76,6 +76,7 @@ namespace ux3d
 			ColorModel_ETC1S = 163U,
 			ColorModel_PVRTC = 164U,
 			ColorModel_PVRTC2 = 165U,
+            ColorModel_UASTC = 166u,
 			ColorModel_MAX = 0xFFU
 		};
 

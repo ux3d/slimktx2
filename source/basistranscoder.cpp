@@ -15,8 +15,6 @@ ux3d::slimktx2::BasisTranscoder::~BasisTranscoder()
 
 bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat)
 {
-    //_targetFormat = TranscodeFormat::ETC1_RGB; // TODO: remove, for debugging only
-    _targetFormat = TranscodeFormat::RGBA32;
     if (_targetFormat == TranscodeFormat::UNDEFINED)
     {
         return false;
@@ -33,16 +31,13 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
         return false;
     }
 
-    // currently only work with ETC1S
-    if (pBlock->header.colorModel != ColorModel_ETC1S)
+    const bool isETC1S = pBlock->header.colorModel == ColorModel_ETC1S;
+    const bool isUASTC = pBlock->header.colorModel == ColorModel_UASTC;
+
+    if (isETC1S == false && isUASTC == false)
     {
         return false;
     }
-
-    // from libktx:
-    //ktxTexture2_TranscodeBasis(ktxTexture2* This,
-    //ktx_transcode_fmt_e outputFormat,
-    //    ktx_transcode_flags transcodeFlags)
 
     const bool sRGB = pBlock->header.transferFunction == TransferFunction_SRGB;
 
@@ -54,7 +49,7 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
 
     alpha_content_e alphaContent = eNone;
 
-    if (pBlock->getSampleCount() == 2)
+    if (isETC1S && pBlock->getSampleCount() == 2)
     {
         if (pBlock->pSamples[1].channelType == ColorChannels_ETC1S_AAA)
         {
@@ -69,23 +64,27 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
             return false;
         }
     }
+    else if (isUASTC && pBlock->getSampleCount() >= 1)
+    {
+        if (pBlock->pSamples->channelType == ColorChannels_UASTC_RGBA)
+        {
+            alphaContent = eAlpha;
+        }
+        else if (pBlock->pSamples->channelType == ColorChannels_UASTC_RRRG)
+        {
+            alphaContent = eGreen;
+        }
+    }
 
     // update ktx header with decoded vk format to be able to allocate the right amount of memory
     _image.m_header.vkFormat = transcodeToVkFormat(_targetFormat, sRGB);
 
-    // TODO: check for UASTC
-
-    //assert(colorModel == KHR_DF_MODEL_UASTC);
-    //uint32_t channelId = KHR_DFDSVAL(BDB, 0, CHANNELID);
-    //if (channelId == KHR_DF_CHANNEL_UASTC_RGBA)
-    //    alphaContent = eAlpha;
-    //else if (channelId == KHR_DF_CHANNEL_UASTC_RRRG)
-    //    alphaContent = eGreen;
-
-    static basist::etc1_global_selector_codebook sel_codebook(basist::g_global_selector_cb_size, basist::g_global_selector_cb);
+    static const basist::etc1_global_selector_codebook sel_codebook(basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 
     basist::basisu_etc1s_image_transcoder bit(&sel_codebook);
+    basist::basisu_uastc_image_transcoder uit;
 
+    if(isETC1S)
     {
         const auto& header = _image.m_basisLZ.header;
         if (bit.decode_palettes(
@@ -121,11 +120,10 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
     for(uint32_t level = 0u, image = 0u; level < levelCount; ++level)
     {
         const LevelIndex& lvl = _image.m_pLevels[level];
-
         const uint64_t faceSize = getFaceSize(ktx.vkFormat, level, ktx.pixelWidth, ktx.pixelHeight, ktx.pixelDepth);
 
         basist::basisu_image_desc imageDesc(
-            basist::basis_tex_format::cETC1S,
+            isETC1S ? basist::basis_tex_format::cETC1S : basist::basis_tex_format::cUASTC4x4,
             max(1u, ktx.pixelWidth >> level),
             max(1u, ktx.pixelHeight >> level),
             level);
@@ -150,7 +148,11 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
                 imageDesc.m_rgb_byte_length = basisImg.rgbSliceByteLength;
                 imageDesc.m_flags = basisImg.imageFlags;
 
-                // TODO: apha slice offset
+                if (alphaContent != eNone)
+                {
+                    imageDesc.m_alpha_byte_offset = basisImg.alphaSliceByteOffset;
+                    imageDesc.m_alpha_byte_length = basisImg.alphaSliceByteLength;
+                }
 
                 uint8_t* pDecoded = nullptr;
                 if (_image.getImage(pDecoded, level, face, layer, static_cast<uint32_t>(faceSize)) != Result::Success)
@@ -158,9 +160,19 @@ bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file
                     return false;
                 }
 
-                if (bit.transcode_image(targetFormat, pDecoded, static_cast<uint32_t>(faceSize), pLevelData, imageDesc, transcodeFlags) == false)
+                if (isETC1S)
                 {
-                    return false;
+					if (bit.transcode_image(targetFormat, pDecoded, static_cast<uint32_t>(faceSize), pLevelData, imageDesc, transcodeFlags) == false)
+					{
+						return false;
+					}                
+                }
+                else if (isUASTC)
+                {
+                    if (uit.transcode_image(targetFormat, pDecoded, static_cast<uint32_t>(faceSize), pLevelData, imageDesc, transcodeFlags, alphaContent != eNone) == false)
+                    {
+                        return false;
+                    }
                 }
             }
         }
