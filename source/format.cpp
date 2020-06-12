@@ -228,30 +228,56 @@ bool ux3d::slimktx2::getBlockSize(Format _vkFormat, uint32_t& _outWdith, uint32_
 	_outWdith = _outHeight = 1u;
 	switch (_vkFormat)
 	{
+	case Format::BC1_RGB_SRGB_BLOCK:
+	case Format::BC1_RGB_UNORM_BLOCK:
+	case Format::BC1_RGBA_SRGB_BLOCK:
+	case Format::BC1_RGBA_UNORM_BLOCK:
+	case Format::BC2_UNORM_BLOCK:
+	case Format::BC2_SRGB_BLOCK:
+	case Format::BC3_SRGB_BLOCK:
+	case Format::BC3_UNORM_BLOCK:
+	case Format::BC4_UNORM_BLOCK:
+	case Format::BC4_SNORM_BLOCK:
+	case Format::BC5_UNORM_BLOCK:
+	case Format::BC5_SNORM_BLOCK:
+	case Format::BC6H_UFLOAT_BLOCK:
+	case Format::BC6H_SFLOAT_BLOCK:
+	case Format::BC7_SRGB_BLOCK:
+	case Format::BC7_UNORM_BLOCK:
+
 	case Format::ETC2_R8G8B8_SRGB_BLOCK:
 	case Format::ETC2_R8G8B8_UNORM_BLOCK:
 	case Format::ETC2_R8G8B8A8_SRGB_BLOCK:
 	case Format::ETC2_R8G8B8A8_UNORM_BLOCK:
-	case Format::BC1_RGB_SRGB_BLOCK:
-	case Format::BC1_RGB_UNORM_BLOCK:
-	case Format::BC3_SRGB_BLOCK:
-	case Format::BC3_UNORM_BLOCK:
-	case Format::BC4_UNORM_BLOCK:
-	case Format::BC5_UNORM_BLOCK:
-	case Format::BC7_SRGB_BLOCK:
-	case Format::BC7_UNORM_BLOCK:
-	case Format::PVRTC1_4BPP_SRGB_BLOCK_IMG:
-	case Format::PVRTC1_4BPP_UNORM_BLOCK_IMG:
+	case Format::ETC2_R8G8B8A1_SRGB_BLOCK:
+	case Format::ETC2_R8G8B8A1_UNORM_BLOCK:
+
+	case Format::EAC_R11_UNORM_BLOCK:
+	case Format::EAC_R11_SNORM_BLOCK:
+	case Format::EAC_R11G11_UNORM_BLOCK:
+	case Format::EAC_R11G11_SNORM_BLOCK:
+
 	case Format::ASTC_4x4_SRGB_BLOCK:
 	case Format::ASTC_4x4_UNORM_BLOCK:
+
+	case Format::PVRTC1_4BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_UNORM_BLOCK_IMG:
 	case Format::PVRTC2_4BPP_SRGB_BLOCK_IMG:
 	case Format::PVRTC2_4BPP_UNORM_BLOCK_IMG:
-	case Format::EAC_R11_UNORM_BLOCK:
-	case Format::EAC_R11G11_UNORM_BLOCK:
+
 		_outWdith = 4u;
 		_outHeight = 4u;
 		break;
 		
+	case Format::PVRTC1_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC1_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_UNORM_BLOCK_IMG:
+
+		_outWdith = 8u;
+		_outHeight = 4u;
+		break;
+
 	default:
 		return false; // not block compressed
 	}
