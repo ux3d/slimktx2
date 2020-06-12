@@ -2,7 +2,10 @@
 
 #pragma once
 
-#include <new> // placement new
+#include <cstddef>
+#include <cstdint>
+#include <cstdarg>
+#include <new>
 
 #include "dfd.h"
 #include "kvd.h"
