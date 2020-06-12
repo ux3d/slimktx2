@@ -174,16 +174,49 @@ uint32_t ux3d::slimktx2::getFormatSize(ux3d::slimktx2::Format _vkFormat)
 		return 32u;
 
 		// 64-bit 
+
+	case Format::BC1_RGB_UNORM_BLOCK:
+	case Format::BC1_RGB_SRGB_BLOCK:
+	case Format::BC1_RGBA_UNORM_BLOCK:
+	case Format::BC1_RGBA_SRGB_BLOCK:
+	case Format::BC4_UNORM_BLOCK:
+	case Format::BC4_SNORM_BLOCK:
+
 	case Format::ETC2_R8G8B8_UNORM_BLOCK:
 	case Format::ETC2_R8G8B8_SRGB_BLOCK:
 	case Format::ETC2_R8G8B8A1_UNORM_BLOCK:
 	case Format::ETC2_R8G8B8A1_SRGB_BLOCK:
+	case Format::EAC_R11_UNORM_BLOCK:
+	case Format::EAC_R11_SNORM_BLOCK:
+	case Format::PVRTC1_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC1_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_SRGB_BLOCK_IMG:
 		return 8u;
+
+		// 128-bit
+	case Format::BC2_UNORM_BLOCK:
+	case Format::BC2_SRGB_BLOCK:
+	case Format::BC3_UNORM_BLOCK:
+	case Format::BC3_SRGB_BLOCK:
+	case Format::BC5_UNORM_BLOCK:
+	case Format::BC5_SNORM_BLOCK:
+	case Format::BC6H_UFLOAT_BLOCK:
+	case Format::BC6H_SFLOAT_BLOCK:
+	case Format::BC7_UNORM_BLOCK:
+	case Format::BC7_SRGB_BLOCK:
+
 	case Format::ETC2_R8G8B8A8_UNORM_BLOCK:
 	case Format::ETC2_R8G8B8A8_SRGB_BLOCK:
+	case Format::EAC_R11G11_UNORM_BLOCK:
+	case Format::EAC_R11G11_SNORM_BLOCK:
+	case Format::ASTC_4x4_UNORM_BLOCK:
+	case Format::ASTC_4x4_SRGB_BLOCK:
 		return 16u;
-
-		// TODO: MORE BLOCK FORMATS!
 
 	default:
 		return 0u; // invalid
