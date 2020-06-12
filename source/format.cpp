@@ -308,6 +308,12 @@ uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64_UINT:
 	case Format::R64_SINT:
 	case Format::R64_SFLOAT:
+
+	case Format::BC4_UNORM_BLOCK:
+	case Format::BC4_SNORM_BLOCK:
+
+	case Format::EAC_R11_UNORM_BLOCK:
+	case Format::EAC_R11_SNORM_BLOCK:
 		return 1u;
 
 	case Format::R4G4_UNORM_PACK8:
@@ -331,6 +337,12 @@ uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64_UINT:
 	case Format::R64G64_SINT:
 	case Format::R64G64_SFLOAT:
+
+	case Format::BC5_UNORM_BLOCK:
+	case Format::BC5_SNORM_BLOCK:
+
+	case Format::EAC_R11G11_UNORM_BLOCK:
+	case Format::EAC_R11G11_SNORM_BLOCK:
 		return 2u;
 
 	case Format::R5G6B5_UNORM_PACK16:
@@ -361,6 +373,15 @@ uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64B64_UINT:
 	case Format::R64G64B64_SINT:
 	case Format::R64G64B64_SFLOAT:
+
+	case Format::BC1_RGB_UNORM_BLOCK:
+	case Format::BC1_RGB_SRGB_BLOCK:
+
+	case Format::BC6H_UFLOAT_BLOCK:
+	case Format::BC6H_SFLOAT_BLOCK:
+
+	case Format::ETC2_R8G8B8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8_SRGB_BLOCK:
 		return 3u;
 
 	case Format::R4G4B4A4_UNORM_PACK16:
@@ -404,6 +425,33 @@ uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64B64A64_UINT:
 	case Format::R64G64B64A64_SINT:
 	case Format::R64G64B64A64_SFLOAT:
+
+	case Format::BC1_RGBA_UNORM_BLOCK:
+	case Format::BC1_RGBA_SRGB_BLOCK:
+	case Format::BC2_UNORM_BLOCK:
+	case Format::BC2_SRGB_BLOCK:
+	case Format::BC3_UNORM_BLOCK:
+	case Format::BC3_SRGB_BLOCK:
+
+	case Format::BC7_UNORM_BLOCK:
+	case Format::BC7_SRGB_BLOCK:
+
+	case Format::ETC2_R8G8B8A1_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A1_SRGB_BLOCK:
+	case Format::ETC2_R8G8B8A8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A8_SRGB_BLOCK:
+
+	case Format::ASTC_4x4_UNORM_BLOCK:
+	case Format::ASTC_4x4_SRGB_BLOCK:
+
+	case Format::PVRTC1_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC1_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_SRGB_BLOCK_IMG:
 		return 4u;
 
 	default:
