@@ -51,6 +51,9 @@ endif()
 add_library(${PROJECT_NAME} SHARED ${slimktx2_sources} ${slimktx2_public_headers})
 target_include_directories(${PROJECT_NAME} PUBLIC "include" PRIVATE "source")
 
+# specify the public headers (will be copied to `include` in install step)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${slimktx2_public_headers}")
+
 
 # optionally add basis universal
 if(SLIMKTX2_USE_BASISU)
