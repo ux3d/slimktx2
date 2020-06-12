@@ -17,6 +17,16 @@ namespace ux3d
 {
 	namespace slimktx2
 	{
+		// helpers:
+		template <class T>
+		T max(T x, T y) { return x > y ? x : y; }
+		template <class T>
+		T max(T x, T y, T z) { return max(max(x, y), z); }
+		template <class T>
+		T min(T x, T y) { return x < y ? x : y; }
+		template <class T>
+		T min(T x, T y, T z) { return min(min(x, y), z); }
+
 		enum class SupercompressionScheme : uint32_t
 		{
 			None = 0,

@@ -173,7 +173,17 @@ uint32_t ux3d::slimktx2::getFormatSize(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64B64A64_SFLOAT:
 		return 32u;
 
-		// TODO: BLOCK FORMATS!
+		// 64-bit 
+	case Format::ETC2_R8G8B8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8_SRGB_BLOCK:
+	case Format::ETC2_R8G8B8A1_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A1_SRGB_BLOCK:
+		return 8u;
+	case Format::ETC2_R8G8B8A8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A8_SRGB_BLOCK:
+		return 16u;
+
+		// TODO: MORE BLOCK FORMATS!
 
 	default:
 		return 0u; // invalid
