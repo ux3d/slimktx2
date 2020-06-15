@@ -18,7 +18,7 @@ namespace ux3d
 			BasisTranscoder();
 			~BasisTranscoder();
 
-			bool transcode(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat);
+			bool decompress(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat);
 
 		private:
 

@@ -138,7 +138,7 @@ Result SlimKTX2::parse(IOHandle _file, TranscodeFormat _targetFormat)
 	{
 #ifdef SLIMKTX2_USE_BASISU
 		BasisTranscoder bit;
-		if (bit.transcode(*this, _file, _targetFormat) == false)
+		if (bit.decompress(*this, _file, _targetFormat) == false)
 		{
 			return Result::BasisTranscodeFailed;
 		}
