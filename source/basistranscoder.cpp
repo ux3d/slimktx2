@@ -13,7 +13,7 @@ ux3d::slimktx2::BasisTranscoder::~BasisTranscoder()
 {
 }
 
-bool ux3d::slimktx2::BasisTranscoder::transcode(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat)
+bool ux3d::slimktx2::BasisTranscoder::decompress(SlimKTX2& _image, IOHandle _file, TranscodeFormat _targetFormat)
 {
     if (_targetFormat == TranscodeFormat::UNDEFINED)
     {
