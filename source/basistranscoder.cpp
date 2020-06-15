@@ -1,7 +1,7 @@
 // Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #include "basistranscoder.h"
-#include <basisu_transcoder.h>
+#include <transcoder/basisu_transcoder.h>
 #include "slimktx2.h"
 
 ux3d::slimktx2::BasisTranscoder::BasisTranscoder()
