@@ -61,11 +61,10 @@ if(SLIMKTX2_USE_BASISU)
     add_definitions(-DSLIMKTX2_USE_BASISU)
 
     # construct the name of the basis_universal library (depending on the platform)
-    if(UNIX)
-        set(basisu_library_name libbasisu.a)
-    else()
-        # DLL systems
+    if(MSVC)
         set(basisu_library_name basisu.lib)
+    else()
+        set(basisu_library_name libbasisu.a)
     endif()
 
     # use a custom branch of basisu, which allows it being built as library
@@ -74,7 +73,7 @@ if(SLIMKTX2_USE_BASISU)
       PREFIX thirdparty/basisu
       GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
       GIT_TAG           origin/build_library
-      CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+      CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -G${CMAKE_GENERATOR}
       BUILD_BYPRODUCTS <INSTALL_DIR>/lib/${basisu_library_name}
       )
     ExternalProject_Get_Property(basis_universal install_dir)
