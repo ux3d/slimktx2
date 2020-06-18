@@ -71,8 +71,7 @@ if(SLIMKTX2_USE_BASISU)
     include(ExternalProject)
     ExternalProject_Add(basis_universal
       PREFIX thirdparty/basisu
-      GIT_REPOSITORY    git@github.com:ux3d/basis_universal.git
-      GIT_TAG           origin/build_library
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/basis_universal 
       CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -G${CMAKE_GENERATOR}
       BUILD_BYPRODUCTS <INSTALL_DIR>/lib/${basisu_library_name}
       )
