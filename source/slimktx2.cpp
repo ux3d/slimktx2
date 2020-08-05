@@ -3,21 +3,13 @@
 #include "slimktx2.h"
 #include <cstring>
 
+#ifdef SLIMKTX2_USE_BASISU
+#include "basistranscoder.h"
+#endif
+
 using namespace ux3d::slimktx2;
 
 const uint8_t Header::Magic[12] = { 0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A };
-
-template <class T>
-T max(T x, T y) { return x > y ? x : y; }
-
-template <class T>
-T max(T x, T y, T z) { return max(max(x,y),z); }
-
-template <class T>
-T min(T x, T y) { return x < y ? x : y; }
-
-template <class T>
-T min(T x, T y, T z) { return min(min(x, y), z); }
 
 SlimKTX2::SlimKTX2(const Callbacks& _callbacks) : m_callbacks(_callbacks)
 {
@@ -46,6 +38,8 @@ void SlimKTX2::clear()
 
 	destroyKVD();
 
+	destroySGD();
+
 	destoryMipLevelArray();
 }
 
@@ -58,10 +52,8 @@ uint64_t SlimKTX2::getFaceImageOffset(uint32_t _level, uint32_t _face, uint32_t 
 		return 0u;
 	}
 
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-
 	// add largest level
-	const uint64_t faceSize = getFaceSize(pixelSize, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+	const uint64_t faceSize = getFaceSize(m_header.vkFormat, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 
 	// number of previous layers with either 1 or 6 faces
 	uint64_t prevFaces = faceSize * _layer * m_header.faceCount;
@@ -75,9 +67,11 @@ uint64_t SlimKTX2::getFaceImageOffset(uint32_t _level, uint32_t _face, uint32_t 
 	return offset;
 }
 
-Result SlimKTX2::parse(IOHandle _file)
+Result SlimKTX2::parse(IOHandle _file, TranscodeFormat _targetFormat)
 {
 	clear();
+
+	Result res = Result::Success;
 
 	if (read(_file, &m_header) == false)
 	{
@@ -125,29 +119,62 @@ Result SlimKTX2::parse(IOHandle _file)
 		return Result::IOReadFail;
 	}
 
-	// TODO: sgd	
-
-	Result res = allocateMipLevelArray();
-
-	if (res != Result::Success)
+	// TODO: sgd - basisLZ only atm
+	if (m_sections.sgdByteLength != 0u)
 	{
-		return res;
+		if (seek(_file, m_sections.sgdByteOffset) == false)
+		{
+			return Result::IOReadFail;
+		}
+
+		res = readSGD(_file);
+		if (res != Result::Success)
+		{
+			return res;
+		}
 	}
 
-	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
+	if (m_header.supercompressionScheme == static_cast<uint32_t>(SupercompressionScheme::BasisLZ))
 	{
-		const LevelIndex& lvl = m_pLevels[level];
-
-		// skip to first level
-		if (seek(_file, lvl.byteOffset) == false)
+#ifdef SLIMKTX2_USE_BASISU
+		BasisTranscoder bit;
+		if (bit.decompress(*this, _file, _targetFormat) == false)
 		{
-			return Result::IOReadFail;
+			return Result::BasisTranscodeFailed;
+		}
+#else
+		log("slimktx2 not compiled with basisu support\n");
+		return Result::UnknownFormat;
+#endif
+	}
+	else if (m_header.vkFormat != Format::UNDEFINED)
+	{
+		res = allocateMipLevelArray();
+		if (res != Result::Success)
+		{
+			return res;
 		}
 
-		if (read(_file, m_pMipLevelArray[level], lvl.byteLength) == false)
+		for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
 		{
-			return Result::IOReadFail;
+			const LevelIndex& lvl = m_pLevels[level];
+
+			// skip to first level
+			if (seek(_file, lvl.byteOffset) == false)
+			{
+				return Result::IOReadFail;
+			}
+
+			if (read(_file, m_pMipLevelArray[level], lvl.byteLength) == false)
+			{
+				return Result::IOReadFail;
+			}
 		}
+	}
+	else
+	{
+		log("vkFormat not specified\n");
+		return Result::UnknownFormat;
 	}
 
 	return Result::Success;
@@ -179,10 +206,17 @@ Result SlimKTX2::serialize(IOHandle _file)
 		return Result::KeyValueDataNotAllocated;
 	}
 
+	const bool isBasis = m_header.supercompressionScheme == static_cast<uint32_t>(SupercompressionScheme::BasisLZ);
+
+	if (m_basisLZ.pImageDescs == nullptr && isBasis)
+	{
+		log("SGD not specified\n");
+		return Result::SupercompressionGlobalDataNotAllocated;
+	}
+
 	const size_t streamStart = tell(_file);
 	auto filePos = [&](IOHandle file) -> size_t { return tell(file) - streamStart; };
 
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
 	const uint32_t levelCount = getLevelCount();
 
 	const uint32_t dfdByteLength = m_dfd.computeSize();
@@ -207,14 +241,14 @@ Result SlimKTX2::serialize(IOHandle _file)
 		levelOffset += mipPad;
 
 		// start with the small level, fill them in reverse
-		uint64_t levelSize = getFaceSize(pixelSize, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		uint64_t levelSize = getFaceSize(m_header.vkFormat, level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
 
 		// absolute levelOffset within the file
 		m_pLevels[level].byteOffset = levelOffset;
 		m_pLevels[level].byteLength = levelSize;
-		m_pLevels[level].uncompressedByteLength = levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
+		m_pLevels[level].uncompressedByteLength = isBasis ? 0u : levelSize; // uncompressedByteLength % (faceCount * max(1, layerCount)) == 0
 
 		levelOffset += levelSize;
 	}
@@ -265,7 +299,6 @@ Result SlimKTX2::serialize(IOHandle _file)
 		writeKVD(_file);
 	}
 
-	// TODO: sgd
 	// dfd and kvd are required fields and the validator will emit warnings
 	// some parser implementation still work as they also ignore those fields.
 
@@ -273,6 +306,19 @@ Result SlimKTX2::serialize(IOHandle _file)
 	if (m_sections.sgdByteLength > 0u)
 	{
 		writePadding(_file, sdgPadding);
+	}
+
+	if (m_header.supercompressionScheme == static_cast<uint32_t>(SupercompressionScheme::BasisLZ))
+	{
+		curPos = filePos(_file);
+		log("SGD offset %llu size %u\n", curPos, sgdByteLength);
+
+		if (curPos != m_sections.sgdByteOffset)
+		{
+			return Result::IOWriteFail;
+		}
+
+		writeSGD(_file);
 	}
 
 	for (uint32_t level = levelCount - 1u; level <= levelCount; --level)
@@ -339,7 +385,7 @@ const KeyValueData& SlimKTX2::getKVD() const
 	return m_kvd;
 }
 
-Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount, uint32_t _faceCount, uint32_t _depth, uint32_t _layerCount)
+Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _height, uint32_t _levelCount, uint32_t _faceCount, uint32_t _depth, uint32_t _layerCount, SupercompressionScheme _scheme)
 {
 	if (m_pLevels != nullptr)
 	{
@@ -366,7 +412,7 @@ Result SlimKTX2::specifyFormat(Format _vkFormat, uint32_t _width, uint32_t _heig
 	}
 
 	m_header.levelCount = min(maxLevel, _levelCount);
-	m_header.supercompressionScheme = 0u;
+	m_header.supercompressionScheme = static_cast<uint32_t>(_scheme);
 
 	const uint32_t levelCount = getLevelCount();
 	m_pLevels = allocateArray<LevelIndex>(levelCount);
@@ -427,9 +473,12 @@ Result SlimKTX2::allocateMipLevelArray()
 {
 	destoryMipLevelArray();
 
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-
 	const auto levelCount = getLevelCount();
+
+	if (levelCount == 0)
+	{
+		return Result::MipLevelArryNotAllocated;
+	}
 
 	m_pMipLevelArray = allocateArray<uint8_t*>(levelCount);
 
@@ -440,9 +489,14 @@ Result SlimKTX2::allocateMipLevelArray()
 
 	for (uint32_t l = 0u; l < getLevelCount(); ++l)
 	{
-		uint64_t levelSize = getFaceSize(pixelSize, l, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		uint64_t levelSize = getFaceSize(m_header.vkFormat, l, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
+
+		if (levelSize == 0u)
+		{
+			return Result::MipLevelArryNotAllocated;
+		}
 
 		m_pMipLevelArray[l] = allocateArray<uint8_t>(levelSize);
 		if (m_pMipLevelArray[l] == nullptr)
@@ -463,8 +517,7 @@ Result SlimKTX2::setImage(const void* _pData, size_t _byteSize, uint32_t _level,
 		return Result::InvalidLevelIndex;
 	}
 
-	const uint32_t pixelSize = getPixelSize(m_header.vkFormat);
-	const uint64_t imageSize = getFaceSize(pixelSize, _level,  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+	const uint64_t imageSize = getFaceSize(m_header.vkFormat, _level,  m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 
 	if (_byteSize != imageSize)
 	{
@@ -506,7 +559,7 @@ Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _fa
 	if (_imageSize != 0u) 
 	{
 		// for debugging
-		uint64_t levelSize = getFaceSize(getPixelSize(m_header.vkFormat), _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
+		uint64_t levelSize = getFaceSize(m_header.vkFormat, _level, m_header.pixelWidth, m_header.pixelHeight, m_header.pixelDepth);
 		levelSize *= getFaceCount();
 		levelSize *= getLayerCount();
 
@@ -522,6 +575,19 @@ Result SlimKTX2::getImage(uint8_t*& _outImageData, uint32_t _level, uint32_t _fa
 	return Result::Success;
 }
 
+uint32_t SlimKTX2::getImageCount() const
+{
+	// http://github.khronos.org/KTX-Specification/#_supercompression_global_data
+
+	uint32_t layerPixelDepth = max(m_header.pixelDepth, 1u);
+	for (uint32_t i = 1; i < m_header.levelCount; ++i)
+	{
+		layerPixelDepth += max(m_header.pixelDepth >> i, 1u);
+	}
+
+	return max(m_header.layerCount, 1u) * m_header.faceCount * layerPixelDepth;
+}
+
 void* SlimKTX2::allocate(size_t _size)
 {
 	return m_callbacks.allocate(m_callbacks.userData, _size);
@@ -532,7 +598,7 @@ void SlimKTX2::free(void* _pData)
 	m_callbacks.deallocate(m_callbacks.userData, _pData);
 }
 
-void ux3d::slimktx2::SlimKTX2::writePadding(IOHandle _file, size_t _byteSize) const
+void SlimKTX2::writePadding(IOHandle _file, size_t _byteSize) const
 {
 	const uint8_t pad = 0u;
 	for (uint32_t i = 0; i < _byteSize; ++i)
@@ -741,6 +807,118 @@ void SlimKTX2::writeKVD(IOHandle _file) const
 		}
 		pEntry = pEntry->pNext;
 	};
+}
+
+void SlimKTX2::destroySGD()
+{
+	if (m_basisLZ.pImageDescs != nullptr)
+	{
+		free(m_basisLZ.pImageDescs);
+		m_basisLZ.pImageDescs = nullptr;
+	}
+
+	if (m_basisLZ.pEndpoints != nullptr)
+	{
+		free(m_basisLZ.pEndpoints);
+		m_basisLZ.pEndpoints = nullptr;
+	}
+
+	if (m_basisLZ.pSelectors != nullptr)
+	{
+		free(m_basisLZ.pSelectors);
+		m_basisLZ.pSelectors = nullptr;
+	}
+
+	if (m_basisLZ.pTables != nullptr)
+	{
+		free(m_basisLZ.pTables);
+		m_basisLZ.pTables = nullptr;
+	}
+
+	if (m_basisLZ.pExtendedData != nullptr)
+	{
+		free(m_basisLZ.pExtendedData);
+		m_basisLZ.pExtendedData = nullptr;
+	}
+}
+
+Result SlimKTX2::readSGD(IOHandle _file)
+{
+	// only basis lz for now
+
+	if (read(_file, &m_basisLZ.header) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	const uint32_t imageCount = getImageCount();
+
+	m_basisLZ.pImageDescs = allocateArray<BasisLZ::ImageDesc>(imageCount);
+	if (m_basisLZ.pImageDescs == nullptr)
+	{
+		return Result::SupercompressionGlobalDataNotAllocated;
+	}
+	if (read(_file, m_basisLZ.pImageDescs, imageCount) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	m_basisLZ.pEndpoints = allocateArray<uint8_t>(m_basisLZ.header.endpointsByteLength);
+	if (m_basisLZ.pEndpoints == nullptr)
+	{
+		return Result::SupercompressionGlobalDataNotAllocated;
+	}
+	if (read(_file, m_basisLZ.pEndpoints, m_basisLZ.header.endpointsByteLength) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	m_basisLZ.pSelectors = allocateArray<uint8_t>(m_basisLZ.header.selectorsByteLength);
+	if (m_basisLZ.pSelectors == nullptr)
+	{
+		return Result::SupercompressionGlobalDataNotAllocated;
+	}
+	if (read(_file, m_basisLZ.pSelectors, m_basisLZ.header.selectorsByteLength) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	m_basisLZ.pTables = allocateArray<uint8_t>(m_basisLZ.header.tablesByteLength);
+	if (m_basisLZ.pTables == nullptr)
+	{
+		return Result::SupercompressionGlobalDataNotAllocated;
+	}
+	if (read(_file, m_basisLZ.pTables, m_basisLZ.header.tablesByteLength) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	m_basisLZ.pExtendedData = allocateArray<uint8_t>(m_basisLZ.header.extendedByteLength);
+	if (m_basisLZ.pExtendedData == nullptr)
+	{
+		return Result::SupercompressionGlobalDataNotAllocated;
+	}
+	if (read(_file, m_basisLZ.pExtendedData, m_basisLZ.header.extendedByteLength) == false)
+	{
+		return Result::IOReadFail;
+	}
+
+	return Result::Success;
+}
+
+void SlimKTX2::writeSGD(IOHandle _file) const
+{
+	// only basis lz for now
+
+	write(_file, &m_basisLZ.header);
+
+	const uint32_t imageCount = getImageCount();
+
+	write(_file, m_basisLZ.pImageDescs, imageCount);
+	write(_file, m_basisLZ.pEndpoints, m_basisLZ.header.endpointsByteLength);
+	write(_file, m_basisLZ.pSelectors, m_basisLZ.header.selectorsByteLength);
+	write(_file, m_basisLZ.pTables, m_basisLZ.header.tablesByteLength);
+	write(_file, m_basisLZ.pExtendedData, m_basisLZ.header.extendedByteLength);
 }
 
 void SlimKTX2::destoryMipLevelArray()

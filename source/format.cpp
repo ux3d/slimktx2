@@ -1,6 +1,7 @@
 // Copyright (c) 2019 UX3D GmbH. All rights reserved.
 
 #include "format.h"
+#include <cmath>
 
 uint32_t ux3d::slimktx2::getTypeSize(ux3d::slimktx2::Format _vkFormat)
 {
@@ -23,13 +24,17 @@ uint32_t ux3d::slimktx2::getTypeSize(ux3d::slimktx2::Format _vkFormat)
 	{
 		return 8u;
 	}
+	else if (_vkFormat >= Format::BC1_RGB_UNORM_BLOCK && _vkFormat <= Format::PVRTC2_4BPP_SRGB_BLOCK_IMG)
+	{
+		return 1u; // "For formats whose Vulkan names have the suffix _BLOCK it must equal 1"
+	}
 
 	// TODO: Implement depth/stencil formats
 
 	return 0u; // invalid
 }
 
-uint32_t ux3d::slimktx2::getPixelSize(ux3d::slimktx2::Format _vkFormat)
+uint32_t ux3d::slimktx2::getFormatSize(ux3d::slimktx2::Format _vkFormat)
 {
 	switch (_vkFormat)
 	{
@@ -168,9 +173,116 @@ uint32_t ux3d::slimktx2::getPixelSize(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64B64A64_SFLOAT:
 		return 32u;
 
+		// 64-bit 
+
+	case Format::BC1_RGB_UNORM_BLOCK:
+	case Format::BC1_RGB_SRGB_BLOCK:
+	case Format::BC1_RGBA_UNORM_BLOCK:
+	case Format::BC1_RGBA_SRGB_BLOCK:
+	case Format::BC4_UNORM_BLOCK:
+	case Format::BC4_SNORM_BLOCK:
+
+	case Format::ETC2_R8G8B8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8_SRGB_BLOCK:
+	case Format::ETC2_R8G8B8A1_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A1_SRGB_BLOCK:
+	case Format::EAC_R11_UNORM_BLOCK:
+	case Format::EAC_R11_SNORM_BLOCK:
+	case Format::PVRTC1_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC1_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_SRGB_BLOCK_IMG:
+		return 8u;
+
+		// 128-bit
+	case Format::BC2_UNORM_BLOCK:
+	case Format::BC2_SRGB_BLOCK:
+	case Format::BC3_UNORM_BLOCK:
+	case Format::BC3_SRGB_BLOCK:
+	case Format::BC5_UNORM_BLOCK:
+	case Format::BC5_SNORM_BLOCK:
+	case Format::BC6H_UFLOAT_BLOCK:
+	case Format::BC6H_SFLOAT_BLOCK:
+	case Format::BC7_UNORM_BLOCK:
+	case Format::BC7_SRGB_BLOCK:
+
+	case Format::ETC2_R8G8B8A8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A8_SRGB_BLOCK:
+	case Format::EAC_R11G11_UNORM_BLOCK:
+	case Format::EAC_R11G11_SNORM_BLOCK:
+	case Format::ASTC_4x4_UNORM_BLOCK:
+	case Format::ASTC_4x4_SRGB_BLOCK:
+		return 16u;
+
 	default:
 		return 0u; // invalid
 	}
+}
+
+bool ux3d::slimktx2::getBlockSize(Format _vkFormat, uint32_t& _outWdith, uint32_t& _outHeight)
+{
+	_outWdith = _outHeight = 1u;
+	switch (_vkFormat)
+	{
+	case Format::BC1_RGB_SRGB_BLOCK:
+	case Format::BC1_RGB_UNORM_BLOCK:
+	case Format::BC1_RGBA_SRGB_BLOCK:
+	case Format::BC1_RGBA_UNORM_BLOCK:
+	case Format::BC2_UNORM_BLOCK:
+	case Format::BC2_SRGB_BLOCK:
+	case Format::BC3_SRGB_BLOCK:
+	case Format::BC3_UNORM_BLOCK:
+	case Format::BC4_UNORM_BLOCK:
+	case Format::BC4_SNORM_BLOCK:
+	case Format::BC5_UNORM_BLOCK:
+	case Format::BC5_SNORM_BLOCK:
+	case Format::BC6H_UFLOAT_BLOCK:
+	case Format::BC6H_SFLOAT_BLOCK:
+	case Format::BC7_SRGB_BLOCK:
+	case Format::BC7_UNORM_BLOCK:
+
+	case Format::ETC2_R8G8B8_SRGB_BLOCK:
+	case Format::ETC2_R8G8B8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A8_SRGB_BLOCK:
+	case Format::ETC2_R8G8B8A8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A1_SRGB_BLOCK:
+	case Format::ETC2_R8G8B8A1_UNORM_BLOCK:
+
+	case Format::EAC_R11_UNORM_BLOCK:
+	case Format::EAC_R11_SNORM_BLOCK:
+	case Format::EAC_R11G11_UNORM_BLOCK:
+	case Format::EAC_R11G11_SNORM_BLOCK:
+
+	case Format::ASTC_4x4_SRGB_BLOCK:
+	case Format::ASTC_4x4_UNORM_BLOCK:
+
+	case Format::PVRTC1_4BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_UNORM_BLOCK_IMG:
+
+		_outWdith = 4u;
+		_outHeight = 4u;
+		break;
+		
+	case Format::PVRTC1_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC1_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_UNORM_BLOCK_IMG:
+
+		_outWdith = 8u;
+		_outHeight = 4u;
+		break;
+
+	default:
+		return false; // not block compressed
+	}
+
+	return true;
 }
 
 uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
@@ -196,6 +308,12 @@ uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64_UINT:
 	case Format::R64_SINT:
 	case Format::R64_SFLOAT:
+
+	case Format::BC4_UNORM_BLOCK:
+	case Format::BC4_SNORM_BLOCK:
+
+	case Format::EAC_R11_UNORM_BLOCK:
+	case Format::EAC_R11_SNORM_BLOCK:
 		return 1u;
 
 	case Format::R4G4_UNORM_PACK8:
@@ -219,6 +337,12 @@ uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64_UINT:
 	case Format::R64G64_SINT:
 	case Format::R64G64_SFLOAT:
+
+	case Format::BC5_UNORM_BLOCK:
+	case Format::BC5_SNORM_BLOCK:
+
+	case Format::EAC_R11G11_UNORM_BLOCK:
+	case Format::EAC_R11G11_SNORM_BLOCK:
 		return 2u;
 
 	case Format::R5G6B5_UNORM_PACK16:
@@ -249,6 +373,15 @@ uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64B64_UINT:
 	case Format::R64G64B64_SINT:
 	case Format::R64G64B64_SFLOAT:
+
+	case Format::BC1_RGB_UNORM_BLOCK:
+	case Format::BC1_RGB_SRGB_BLOCK:
+
+	case Format::BC6H_UFLOAT_BLOCK:
+	case Format::BC6H_SFLOAT_BLOCK:
+
+	case Format::ETC2_R8G8B8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8_SRGB_BLOCK:
 		return 3u;
 
 	case Format::R4G4B4A4_UNORM_PACK16:
@@ -292,6 +425,33 @@ uint32_t ux3d::slimktx2::getChannelCount(ux3d::slimktx2::Format _vkFormat)
 	case Format::R64G64B64A64_UINT:
 	case Format::R64G64B64A64_SINT:
 	case Format::R64G64B64A64_SFLOAT:
+
+	case Format::BC1_RGBA_UNORM_BLOCK:
+	case Format::BC1_RGBA_SRGB_BLOCK:
+	case Format::BC2_UNORM_BLOCK:
+	case Format::BC2_SRGB_BLOCK:
+	case Format::BC3_UNORM_BLOCK:
+	case Format::BC3_SRGB_BLOCK:
+
+	case Format::BC7_UNORM_BLOCK:
+	case Format::BC7_SRGB_BLOCK:
+
+	case Format::ETC2_R8G8B8A1_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A1_SRGB_BLOCK:
+	case Format::ETC2_R8G8B8A8_UNORM_BLOCK:
+	case Format::ETC2_R8G8B8A8_SRGB_BLOCK:
+
+	case Format::ASTC_4x4_UNORM_BLOCK:
+	case Format::ASTC_4x4_SRGB_BLOCK:
+
+	case Format::PVRTC1_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_UNORM_BLOCK_IMG:
+	case Format::PVRTC1_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC1_4BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_2BPP_SRGB_BLOCK_IMG:
+	case Format::PVRTC2_4BPP_SRGB_BLOCK_IMG:
 		return 4u;
 
 	default:
@@ -927,13 +1087,32 @@ bool ux3d::slimktx2::isPacked(ux3d::slimktx2::Format _vkFormat)
 
 bool ux3d::slimktx2::isCompressed(ux3d::slimktx2::Format _vkFormat)
 {
-	return false;
+	return _vkFormat >= Format::BC1_RGB_UNORM_BLOCK && _vkFormat <= Format::PVRTC2_4BPP_SRGB_BLOCK_IMG;
 }
 
-uint64_t ux3d::slimktx2::getFaceSize(uint32_t _pixelByteSize, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
+uint64_t ux3d::slimktx2::getFaceSize(Format _vkFormat, uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
 {
-	const uint64_t resolution = getPixelCount(_level, _width, _height, _depth);
-	return resolution * _pixelByteSize;
+	uint32_t blockWidth = 1u;
+	uint32_t blockHeight = 1u;
+
+	const uint32_t bytesPerBlock = getFormatSize(_vkFormat);
+
+	if (getBlockSize(_vkFormat, blockWidth, blockHeight))
+	{
+		const uint32_t width = _width >> _level;
+		const uint32_t height = _height >> _level;
+
+		const uint32_t blockCountX = static_cast<uint32_t>(ceilf(width / static_cast<float>(blockWidth)));
+		const uint32_t blockCountY = static_cast<uint32_t>(ceilf(height / static_cast<float>(blockHeight)));
+
+		return bytesPerBlock * blockCountX * blockCountY;
+	}
+	else
+	{
+		const uint64_t resolution = getPixelCount(_level, _width, _height, _depth);
+
+		return resolution * bytesPerBlock;
+	}
 }
 
 uint32_t ux3d::slimktx2::getPixelCount(uint32_t _level, uint32_t _width, uint32_t _height, uint32_t _depth)
@@ -980,8 +1159,55 @@ uint32_t ux3d::slimktx2::getMipPadding(uint64_t _value, ux3d::slimktx2::Format _
 		return getPadding(_value, 16u); // 16 byte alignment
 	}
 
-	const uint32_t texelBlockSize = getPixelSize(_vkFormat);
+	const uint32_t texelBlockSize = getFormatSize(_vkFormat);
 	const uint32_t lcm = getLCM(texelBlockSize, 4u);
 	const uint32_t padding = getPadding(_value, lcm);
 	return padding;
+}
+
+ux3d::slimktx2::Format ux3d::slimktx2::transcodeToVkFormat(TranscodeFormat _format, bool _sRGB)
+{
+	switch (_format)
+	{
+	case TranscodeFormat::ETC1_RGB:
+		return _sRGB ? Format::ETC2_R8G8B8_SRGB_BLOCK : Format::ETC2_R8G8B8_UNORM_BLOCK;
+	case TranscodeFormat::ETC2_RGBA:
+		return _sRGB ? Format::ETC2_R8G8B8A8_SRGB_BLOCK : Format::ETC2_R8G8B8A8_UNORM_BLOCK;
+	case TranscodeFormat::BC1_RGB:
+		return _sRGB ? Format::BC1_RGB_SRGB_BLOCK : Format::BC1_RGB_UNORM_BLOCK;
+	case TranscodeFormat::BC3_RGBA:
+		return _sRGB ? Format::BC3_SRGB_BLOCK : Format::BC3_UNORM_BLOCK;
+	case TranscodeFormat::BC4_R:
+		return Format::BC4_UNORM_BLOCK;
+	case TranscodeFormat::BC5_RG:
+		return Format::BC5_UNORM_BLOCK;
+	case TranscodeFormat::BC7_RGBA:
+		return _sRGB ? Format::BC7_SRGB_BLOCK : Format::BC7_UNORM_BLOCK;
+	case TranscodeFormat::PVRTC1_4_RGB:
+	case TranscodeFormat::PVRTC1_4_RGBA:
+		return _sRGB ? Format::PVRTC1_4BPP_SRGB_BLOCK_IMG : Format::PVRTC1_4BPP_UNORM_BLOCK_IMG;
+	case TranscodeFormat::ASTC_4x4_RGBA:
+		return _sRGB ? Format::ASTC_4x4_SRGB_BLOCK : Format::ASTC_4x4_UNORM_BLOCK;
+	case TranscodeFormat::PVRTC2_4_RGB:
+	case TranscodeFormat::PVRTC2_4_RGBA:
+		return _sRGB ? Format::PVRTC2_4BPP_SRGB_BLOCK_IMG : Format::PVRTC2_4BPP_UNORM_BLOCK_IMG;
+	case TranscodeFormat::ETC2_EAC_R11:
+		return Format::EAC_R11_UNORM_BLOCK;
+	case TranscodeFormat::ETC2_EAC_RG11:
+		return Format::EAC_R11G11_UNORM_BLOCK;
+	case TranscodeFormat::RGBA32:
+		return _sRGB ? Format::R8G8B8A8_SRGB : Format::R8G8B8A8_UNORM;
+	case TranscodeFormat::RGB565:
+		return Format::R5G6B5_UNORM_PACK16;
+	case TranscodeFormat::BGR565:
+		return Format::B5G6R5_UNORM_PACK16;
+	case TranscodeFormat::RGBA4444:
+		return Format::R4G4B4A4_UNORM_PACK16;
+	//case TranscodeFormat::ETC:
+	//	break;
+	//case TranscodeFormat::BC1_OR_3:
+	//	break;
+	default:
+		return Format::UNDEFINED;
+	}
 }

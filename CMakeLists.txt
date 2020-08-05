@@ -5,22 +5,89 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+
+# options
+option(SLIMKTX2_USE_BASISU "use basis_universal to decode compressed ktx2 data" TRUE)
+
 
 #this project
 project(slimktx2)
 
-macro(add_sources expression sources)
-	file(GLOB source_files RELATIVE "${CMAKE_CURRENT_LIST_DIR}" "${expression}")
-	set(${sources} "${${sources}};${source_files}")
-endmacro()
 
 #lib sources
-add_sources("source/*.cpp" "slimktx2_sources")
-add_sources("include/*.h" "slimktx2_sources")
+set(slimktx2_sources
+    source/DefaultAllocationCallback.cpp
+    source/DefaultConsoleLogCallback.cpp
+    source/DefaultFileIOCallback.cpp
+    source/DefaultMemoryStreamCallback.cpp
+    source/dfd.cpp
+    source/format.cpp
+    source/kvd.cpp
+    source/slimktx2.cpp
+    )
+set(slimktx2_public_headers
+    include/DefaultAllocationCallback.h
+    include/DefaultConsoleLogCallback.h
+    include/DefaultFileIOCallback.h
+    include/DefaultMemoryStreamCallback.h
+    include/basislz.h
+    include/callbacks.h
+    include/dfd.h
+    include/format.h
+    include/kvd.h
+    include/slimktx2.h
+    )
+if(SLIMKTX2_USE_BASISU)
+    set(slimktx2_sources ${slimktx2_sources}
+        source/basistranscoder.cpp
+        source/basistranscoder.h
+        )
+endif()
+
 
 #lib project
-add_library(${PROJECT_NAME} SHARED ${slimktx2_sources})
-target_include_directories(${PROJECT_NAME} PUBLIC "include")
+add_library(${PROJECT_NAME} SHARED ${slimktx2_sources} ${slimktx2_public_headers})
+target_include_directories(${PROJECT_NAME} PUBLIC "include" PRIVATE "source")
+
+# specify the public headers (will be copied to `include` in install step)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${slimktx2_public_headers}")
+
+
+# optionally add basis universal
+if(SLIMKTX2_USE_BASISU)
+    # define the preprocessor definition SLIMKTX2_USE_BASISU
+    add_definitions(-DSLIMKTX2_USE_BASISU)
+
+    # construct the name of the basis_universal library (depending on the platform)
+    if(MSVC)
+        set(basisu_library_name basisu.lib)
+    else()
+        set(basisu_library_name libbasisu.a)
+    endif()
+
+    # use a custom branch of basisu, which allows it being built as library
+    include(ExternalProject)
+    ExternalProject_Add(basis_universal
+      PREFIX thirdparty/basisu
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/basis_universal 
+      CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -G${CMAKE_GENERATOR}
+      BUILD_BYPRODUCTS <INSTALL_DIR>/lib/${basisu_library_name}
+      )
+    ExternalProject_Get_Property(basis_universal install_dir)
+
+    # provide an imported target for basisu
+    add_library(basisu STATIC IMPORTED)
+    set_target_properties(basisu PROPERTIES IMPORTED_LOCATION ${install_dir}/lib/${basisu_library_name})
+
+    include_directories(${install_dir}/include)
+    add_dependencies(basisu basis_universal)
+
+    # link basisu into slimktx2
+    target_link_libraries(${PROJECT_NAME} basisu)
+endif()
+
+
+# install target
+install(TARGETS ${PROJECT_NAME})
