@@ -1,6 +1,7 @@
 // Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #include "dfd.h"
+#include <cstddef>
 
 using namespace ux3d::slimktx2;
 
