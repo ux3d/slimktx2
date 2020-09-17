@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2020 UX3D GmbH. All rights reserved.
+// Copyright (c) 2020 UX3D GmbH. All rights reserved.
 
 #include "slimktx2.h"
 #include <cstring>
@@ -225,6 +225,11 @@ Result SlimKTX2::serialize(IOHandle _file)
 	const uint32_t kvdByteOffset = dfdByteOffset + dfdByteLength;
 	const uint64_t sgdByteLength = 0u;
 	uint64_t sgdByteOffset = static_cast<uint64_t>(kvdByteOffset) + static_cast<uint64_t>(kvdByteLength);
+	
+	if (m_dfd.totalSize == 0)
+	{
+		m_dfd.totalSize = dfdByteLength;
+	}
 
 	const uint32_t sdgPadding = getPadding(sgdByteOffset, 8u);
 
