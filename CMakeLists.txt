@@ -72,7 +72,7 @@ if(SLIMKTX2_USE_BASISU)
     ExternalProject_Add(basis_universal
       PREFIX thirdparty/basisu
       SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/basis_universal 
-      CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -G${CMAKE_GENERATOR}
+      CMAKE_ARGS -DBUILD_AS_LIBRARY=TRUE -DSTATIC=TRUE -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -G${CMAKE_GENERATOR} -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
       BUILD_BYPRODUCTS <INSTALL_DIR>/lib/${basisu_library_name}
       )
     ExternalProject_Get_Property(basis_universal install_dir)
