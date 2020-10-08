@@ -1,3 +1,5 @@
+⚠️ SlimKTX2 is now deprecated in favor of the official [Khronos KTX Software Repository](https://github.com/KhronosGroup/KTX-Software)
+
 # SlimKTX2
 Slim C++ library for [KTX2](http://github.khronos.org/KTX-Specification/) binary parsing and writing - released under Apache License 2.0.
 
